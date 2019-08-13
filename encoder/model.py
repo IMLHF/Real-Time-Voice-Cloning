@@ -1,5 +1,5 @@
-from encoder.params_model import *
-from encoder.params_data import *
+from encoder.params_model import model_embedding_size, model_hidden_size, model_num_layers
+from encoder.params_data import mel_n_channels, mel_window_length, mel_window_step
 from scipy.interpolate import interp1d
 from sklearn.metrics import roc_curve
 from torch.nn.utils import clip_grad_norm_
@@ -124,7 +124,9 @@ class SpeakerEncoder(nn.Module):
         
         # EER (not backpropagated)
         with torch.no_grad():
-            inv_argmax = lambda i: np.eye(1, speakers_per_batch, i, dtype=np.int)[0]
+            # inv_argmax = lambda i: np.eye(1, speakers_per_batch, i, dtype=np.int)[0]
+            def inv_argmax(i):
+                return np.eye(1, speakers_per_batch, i, dtype=np.int)[0]
             labels = np.array([inv_argmax(i) for i in ground_truth])
             preds = sim_matrix.detach().cpu().numpy()
 

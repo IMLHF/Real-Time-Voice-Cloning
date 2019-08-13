@@ -33,7 +33,7 @@ def add_embedding_stats(summary_writer, embedding_names, paths_to_meta, checkpoi
 
 
 def add_train_stats(model, hparams):
-    with tf.variable_scope("stats") as scope:
+    with tf.variable_scope("stats"):
         for i in range(hparams.tacotron_num_gpus):
             tf.summary.histogram("mel_outputs %d" % i, model.tower_mel_outputs[i])
             tf.summary.histogram("mel_targets %d" % i, model.tower_mel_targets[i])
@@ -83,7 +83,7 @@ def time_string():
 
 
 def model_train_mode(args, feeder, hparams, global_step):
-    with tf.variable_scope("Tacotron_model", reuse=tf.AUTO_REUSE) as scope:
+    with tf.variable_scope("Tacotron_model", reuse=tf.AUTO_REUSE):
         model = create_model("Tacotron", hparams)
         model.initialize(feeder.inputs, feeder.input_lengths, feeder.speaker_embeddings, 
                          feeder.mel_targets, feeder.token_targets,
@@ -96,7 +96,7 @@ def model_train_mode(args, feeder, hparams, global_step):
 
 
 def model_test_mode(args, feeder, hparams, global_step):
-    with tf.variable_scope("Tacotron_model", reuse=tf.AUTO_REUSE) as scope:
+    with tf.variable_scope("Tacotron_model", reuse=tf.AUTO_REUSE):
         model = create_model("Tacotron", hparams)
         model.initialize(feeder.eval_inputs, feeder.eval_input_lengths, 
                          feeder.eval_speaker_embeddings, feeder.eval_mel_targets,
@@ -140,7 +140,7 @@ def train(log_dir, args, hparams):
     
     # Set up data feeder
     coord = tf.train.Coordinator()
-    with tf.variable_scope("datafeeder") as scope:
+    with tf.variable_scope("datafeeder"):
         feeder = Feeder(coord, metadat_fpath, hparams)
     
     # Set up model:
@@ -237,19 +237,19 @@ def train(log_dir, args, hparams):
                     if hparams.predict_linear:
                         for i in tqdm(range(feeder.test_steps)):
                             eloss, before_loss, after_loss, stop_token_loss, linear_loss, mel_p, \
-                            mel_t, t_len, align, lin_p, lin_t = sess.run(
-                                [
-                                    eval_model.tower_loss[0], eval_model.tower_before_loss[0],
-                                    eval_model.tower_after_loss[0],
-                                    eval_model.tower_stop_token_loss[0],
-                                    eval_model.tower_linear_loss[0],
-                                    eval_model.tower_mel_outputs[0][0],
-                                    eval_model.tower_mel_targets[0][0],
-                                    eval_model.tower_targets_lengths[0][0],
-                                    eval_model.tower_alignments[0][0],
-                                    eval_model.tower_linear_outputs[0][0],
-                                    eval_model.tower_linear_targets[0][0],
-                                ])
+                                mel_t, t_len, align, lin_p, lin_t = sess.run(
+                                    [
+                                        eval_model.tower_loss[0], eval_model.tower_before_loss[0],
+                                        eval_model.tower_after_loss[0],
+                                        eval_model.tower_stop_token_loss[0],
+                                        eval_model.tower_linear_loss[0],
+                                        eval_model.tower_mel_outputs[0][0],
+                                        eval_model.tower_mel_targets[0][0],
+                                        eval_model.tower_targets_lengths[0][0],
+                                        eval_model.tower_alignments[0][0],
+                                        eval_model.tower_linear_outputs[0][0],
+                                        eval_model.tower_linear_targets[0][0],
+                                    ])
                             eval_losses.append(eloss)
                             before_losses.append(before_loss)
                             after_losses.append(after_loss)
@@ -265,16 +265,16 @@ def train(log_dir, args, hparams):
                     else:
                         for i in tqdm(range(feeder.test_steps)):
                             eloss, before_loss, after_loss, stop_token_loss, mel_p, mel_t, t_len,\
-                            align = sess.run(
-                                [
-                                    eval_model.tower_loss[0], eval_model.tower_before_loss[0],
-                                    eval_model.tower_after_loss[0],
-                                    eval_model.tower_stop_token_loss[0],
-                                    eval_model.tower_mel_outputs[0][0],
-                                    eval_model.tower_mel_targets[0][0],
-                                    eval_model.tower_targets_lengths[0][0],
-                                    eval_model.tower_alignments[0][0]
-                                ])
+                                align = sess.run(
+                                    [
+                                        eval_model.tower_loss[0], eval_model.tower_before_loss[0],
+                                        eval_model.tower_after_loss[0],
+                                        eval_model.tower_stop_token_loss[0],
+                                        eval_model.tower_mel_outputs[0][0],
+                                        eval_model.tower_mel_targets[0][0],
+                                        eval_model.tower_targets_lengths[0][0],
+                                        eval_model.tower_alignments[0][0]
+                                    ])
                             eval_losses.append(eloss)
                             before_losses.append(before_loss)
                             after_losses.append(after_loss)

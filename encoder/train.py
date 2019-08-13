@@ -1,6 +1,6 @@
 from encoder.visualizations import Visualizations
 from encoder.data_objects import SpeakerVerificationDataLoader, SpeakerVerificationDataset
-from encoder.params_model import *
+from encoder.params_model import speakers_per_batch, utterances_per_speaker, learning_rate_init
 from encoder.model import SpeakerEncoder
 from utils.profiler import Profiler
 from pathlib import Path
@@ -61,7 +61,7 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
     #vis = Visualizations(run_id, vis_every, server=visdom_server, disabled=no_visdom)
     #vis.log_dataset(dataset)
     #vis.log_params()
-    device_name = str(torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU")
+    # device_name = str(torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU")
     #vis.log_implementation({"Device": device_name})
     
     save_interval_s_time = time.time()
@@ -100,7 +100,7 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         if umap_every != 0 and step % umap_every == 0:
             print("Drawing and saving projections (step %d)" % step)
             backup_dir.mkdir(exist_ok=True)
-            projection_fpath = backup_dir.joinpath("%s_umap_%06d.png" % (run_id, step))
+            # projection_fpath = backup_dir.joinpath("%s_umap_%06d.png" % (run_id, step))
             embeds = embeds.detach().cpu().numpy()
             #vis.draw_projections(embeds, utterances_per_speaker, step, projection_fpath)
             #vis.save()

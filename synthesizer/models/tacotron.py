@@ -440,7 +440,7 @@ class Tacotron():
         grad_device = "/cpu:0" if hp.tacotron_num_gpus > 1 else gpus[0]
         
         with tf.device(grad_device):
-            with tf.variable_scope("optimizer") as scope:
+            with tf.variable_scope("optimizer"):
                 if hp.tacotron_decay_learning_rate:
                     self.decay_steps = hp.tacotron_decay_steps
                     self.decay_rate = hp.tacotron_decay_rate

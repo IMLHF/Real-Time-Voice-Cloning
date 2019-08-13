@@ -36,10 +36,10 @@ class Feeder:
             assert hparams.tacotron_test_batches is not None
 
         test_size = (hparams.tacotron_test_size if hparams.tacotron_test_size is not None
-            else hparams.tacotron_test_batches * hparams.tacotron_batch_size)
+                     else hparams.tacotron_test_batches * hparams.tacotron_batch_size)
         indices = np.arange(len(self._metadata))
-        train_indices, test_indices = train_test_split(indices,
-            test_size=test_size, random_state=hparams.tacotron_data_random_state)
+        train_indices, test_indices = train_test_split(
+            indices, test_size=test_size, random_state=hparams.tacotron_data_random_state)
 
         #Make sure test_indices is a multiple of batch_size else round up
         len_test_indices = self._round_down(len(test_indices), hparams.tacotron_batch_size)
@@ -222,7 +222,7 @@ class Feeder:
             input_cur_device, input_max_len = self._prepare_inputs([x[0] for x in batch])
             inputs = np.concatenate((inputs, input_cur_device), axis=1) if inputs is not None else input_cur_device
             mel_target_cur_device, mel_target_max_len = self._prepare_targets([x[1] for x in batch], outputs_per_step)
-            mel_targets = np.concatenate(( mel_targets, mel_target_cur_device), axis=1) if mel_targets is not None else mel_target_cur_device
+            mel_targets = np.concatenate((mel_targets, mel_target_cur_device), axis=1) if mel_targets is not None else mel_target_cur_device
 
             #Pad sequences with 1 to infer that the sequence is done
             token_target_cur_device, token_target_max_len = self._prepare_token_targets([x[2] for x in batch], outputs_per_step)
@@ -238,7 +238,7 @@ class Feeder:
         ##############
         
         return inputs, input_lengths, mel_targets, token_targets, targets_lengths, \
-               split_infos, embed_targets
+            split_infos, embed_targets
 
     def _prepare_inputs(self, inputs):
         max_len = max([len(x) for x in inputs])
