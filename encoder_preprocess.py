@@ -1,4 +1,4 @@
-from encoder.preprocess import preprocess_librispeech, preprocess_voxceleb1, preprocess_voxceleb2
+from encoder.preprocess import preprocess_librispeech, preprocess_voxceleb1, preprocess_voxceleb2, preprocess_MAGICDATA
 from utils.argutils import print_args
 from pathlib import Path
 import argparse
@@ -24,16 +24,17 @@ if __name__ == "__main__":
                     "    -dev",
         formatter_class=MyFormatter
     )
-    parser.add_argument("datasets_root", type=Path,
-                        help="Path to the directory containing your LibriSpeech/TTS and VoxCeleb datasets.")
+    parser.add_argument("--datasets_root", type=Path, required=True,
+                        help="Path to the directory containing your LibriSpeech/TTS, VoxCeleb datasets and MAGICDATA(MAGICDATA/train will be processed).")
+    parser.add_argument("-d", "--datasets", type=str,
+                        required=True,
+                        # default="librispeech_other,voxceleb1,voxceleb2,MAGICDATA_train", 
+                        help="Comma-separated list of the name of the datasets you want to preprocess. Only the train "
+                        "set of these datasets will be used. Possible names: librispeech_other, voxceleb1, "
+                        "voxceleb2, MAGICDATA_train.")
     parser.add_argument("-o", "--out_dir", type=Path, default=argparse.SUPPRESS,
                         help="Path to the output directory that will contain the mel spectrograms. If left out, "
                         "defaults to <datasets_root>/SV2TTS/encoder/")
-    parser.add_argument("-d", "--datasets", type=str,
-                        default="librispeech_other,voxceleb1,voxceleb2", 
-                        help="Comma-separated list of the name of the datasets you want to preprocess. Only the train "
-                        "set of these datasets will be used. Possible names: librispeech_other, voxceleb1, "
-                        "voxceleb2.")
     parser.add_argument("-s", "--skip_existing", action="store_true",
                         help="Whether to skip existing output files with the same name. Useful if this script was "
                         "interrupted.")
@@ -52,6 +53,7 @@ if __name__ == "__main__":
         "librispeech_other": preprocess_librispeech,
         "voxceleb1": preprocess_voxceleb1,
         "voxceleb2": preprocess_voxceleb2,
+        "MAGICDATA_train": preprocess_MAGICDATA
     }
     args = vars(args)
     for dataset in args.pop("datasets"):

@@ -1,5 +1,5 @@
 from multiprocess.pool import ThreadPool
-from encoder.params_data import *
+from encoder.params_data import partials_n_frames, sampling_rate
 from encoder.config import librispeech_datasets, anglophone_nationalites
 from datetime import datetime
 from encoder import audio
@@ -35,7 +35,7 @@ class DatasetLog:
 
     def add_sample(self, **kwargs):
         for param_name, value in kwargs.items():
-            if not param_name in self.sample_data:
+            if param_name not in self.sample_data:
                 self.sample_data[param_name] = []
             self.sample_data[param_name].append(value)
 
@@ -80,7 +80,7 @@ def _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir,
             try:
                 with sources_fpath.open("r") as sources_file:
                     existing_fnames = {line.split(",")[0] for line in sources_file}
-            except:
+            except Exception:
                 existing_fnames = {}
         else:
             existing_fnames = {}
@@ -118,27 +118,27 @@ def _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir,
     logger.finalize()
     print("Done preprocessing %s.\n" % dataset_name)
 
-#preprocess all the data of SLR38
-def preprocess_ST(datasets_root: Path, out_dir: Path, skip_existing=False):
-    dataset_name = 'new_ST_dataset'
-    dataset_root, logger = _init_preprocess_dataset(dataset_name, datasets_root, out_dir)
-    if not dataset_root:
-        return
-    speaker_dirs = list(dataset_root.glob('*'))
-    _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, 'wav', skip_existing, logger)
+# #preprocess all the data of SLR38
+# def preprocess_ST(datasets_root: Path, out_dir: Path, skip_existing=False):
+#     dataset_name = 'new_ST_dataset'
+#     dataset_root, logger = _init_preprocess_dataset(dataset_name, datasets_root, out_dir)
+#     if not dataset_root:
+#         return
+#     speaker_dirs = list(dataset_root.glob('*'))
+#     _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, 'wav', skip_existing, logger)
 
-# preprocess the dev data of SLR68
-def preprocess_SLR68(datasets_root: Path, out_dir: Path, skip_existing=False):
-    dataset_name = 'dev'
-    dataset_root, logger = _init_preprocess_dataset(dataset_name, datasets_root, out_dir)
-    if not dataset_root:
-        return
-    speaker_dirs = list(dataset_root.glob('*'))
-    _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, 'wav', skip_existing, logger)
+# # preprocess the dev data of SLR68
+# def preprocess_SLR68(datasets_root: Path, out_dir: Path, skip_existing=False):
+#     dataset_name = 'dev'
+#     dataset_root, logger = _init_preprocess_dataset(dataset_name, datasets_root, out_dir)
+#     if not dataset_root:
+#         return
+#     speaker_dirs = list(dataset_root.glob('*'))
+#     _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, 'wav', skip_existing, logger)
 
-# preprocess the training data of SLR68
-def preprocess_SLR68_train(datasets_root: Path, out_dir: Path, skip_existing=False):
-    dataset_name = 'train'
+# preprocess the training data of MAGICDATA/train (SLR68), dataset url: http://www.openslr.org/68/
+def preprocess_MAGICDATA(datasets_root: Path, out_dir: Path, skip_existing=False):
+    dataset_name = 'MAGICDATA_train'
     dataset_root, logger = _init_preprocess_dataset(dataset_name, datasets_root, out_dir)
     if not dataset_root:
         return
