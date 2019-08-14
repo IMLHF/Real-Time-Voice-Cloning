@@ -142,7 +142,11 @@ def preprocess_MAGICDATA(datasets_root: Path, out_dir: Path, skip_existing=False
     dataset_root, logger = _init_preprocess_dataset(dataset_name, datasets_root, out_dir)
     if not dataset_root:
         return
-    speaker_dirs = list(dataset_root.glob('*'))
+    all_sub_dirs = list(dataset_root.glob('*'))
+    speaker_dirs = []
+    for _dir in all_sub_dirs:
+        if _dir.is_file(): continue
+        speaker_dirs.append(_dir)
     _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, 'wav', skip_existing, logger)
 
 
