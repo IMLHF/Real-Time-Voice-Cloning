@@ -1,5 +1,7 @@
 from scipy.ndimage.morphology import binary_dilation
-from encoder.params_data import *
+from encoder.params_data import sampling_rate, audio_norm_target_dBFS
+from encoder.params_data import mel_n_channels, mel_window_length, mel_window_step
+from encoder.params_data import vad_window_length, vad_max_silence_length, vad_moving_average_width
 from pathlib import Path
 from typing import Optional, Union
 import numpy as np
@@ -95,7 +97,7 @@ def trim_long_silences(wav):
     audio_mask = binary_dilation(audio_mask, np.ones(vad_max_silence_length + 1))
     audio_mask = np.repeat(audio_mask, samples_per_window)
     
-    return wav[audio_mask == True]
+    return wav[audio_mask is True]
 
 
 def normalize_volume(wav, target_dBFS, increase_only=False, decrease_only=False):

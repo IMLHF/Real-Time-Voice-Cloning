@@ -1,4 +1,4 @@
-from encoder.params_data import *
+from encoder.params_data import partials_n_frames, sampling_rate, mel_window_step
 from encoder.model import SpeakerEncoder
 from encoder.audio import preprocess_wav   # We want to expose this function from here
 from matplotlib import cm
@@ -156,7 +156,7 @@ def embed_utterance(wav, using_partials=True, return_partials=False, **kwargs):
 
 
 def embed_speaker(wavs, **kwargs):
-    raise NotImplemented()
+    raise NotImplementedError
 
 
 def plot_embedding_as_heatmap(embed, ax=None, title="", shape=None, color_range=(0, 0.30)):
