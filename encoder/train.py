@@ -65,10 +65,11 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
     #vis.log_implementation({"Device": device_name})
     
     save_interval_s_time = time.time()
+    total_loss, total_eer = 0, 0
     # Training loop
     profiler = Profiler(summarize_every=10, disabled=True)
     for step, speaker_batch in enumerate(loader, init_step):
-        step_s_time = time.time()
+        # step_s_time = time.time()
 
         profiler.tick("Blocking, waiting for batch (threaded)")
         
@@ -81,6 +82,8 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         profiler.tick("Forward pass")
         embeds_loss = embeds.view((speakers_per_batch, utterances_per_speaker, -1)).to(loss_device)
         loss, eer = model.loss(embeds_loss)
+        total_loss += loss.detach().numpy()
+        total_eer += eer
         sync(loss_device)
         profiler.tick("Loss")
 
@@ -109,7 +112,11 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         if save_every != 0 and step % save_every == 0:
             save_interval_e_time = time.time()
             cost_time = save_interval_e_time - save_interval_s_time
-            print("Saving the model (step %d), %d step cost %d seconds" % (step, save_every, cost_time))
+            print("\n"
+                  "Step %06d>"
+                  "    Saving the model, %d step cost %d seconds"
+                  "    Avg_loss:%.4f, Avg_eer:%.4f." % (
+                      step, save_every, cost_time, loss.detach().numpy(), eer), flush=True)
             torch.save({
                 "step": step + 1,
                 "model_state": model.state_dict(),
@@ -129,8 +136,8 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
             }, backup_fpath)
             
         profiler.tick("Extras (visualizations, saving)")
-        step_e_time = time.time()
+        # step_e_time = time.time()
         # print("step loss:", loss.detach().numpy(), "step eer:", eer, flush=True)
-        print("step %06d> loss:%.4f, eer:%.4f, cost_time:%dms." % (
-            step, loss.detach().numpy(), eer, (step_e_time-step_s_time)*1000),
-            flush=True)
+        # print("step %06d> loss:%.4f, eer:%.4f, cost_time:%dms." % (
+        #     step, loss.detach().numpy(), eer, (step_e_time-step_s_time)*1000),
+        #     flush=True)
