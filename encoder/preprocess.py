@@ -15,6 +15,7 @@ class DatasetLog:
 
     def __init__(self, root, name):
         self.text_file = open(Path(root, "Log_%s.txt" % name.replace("/", "_")), "w")
+        # print(self.text_file, "___________________", flush=True) # DEBUG
         self.sample_data = dict()
 
         start_time = str(datetime.now().strftime("%A %d %B %Y at %H:%M"))
@@ -112,6 +113,8 @@ def _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir,
         sources_file.close()
 
     # Process the utterances for each speaker
+    # for speaker_dir in speaker_dirs: # DEBUG
+    #     preprocess_speaker(speaker_dir)
     with ThreadPool(16) as pool:
         list(tqdm(pool.imap(preprocess_speaker, speaker_dirs), dataset_name, len(speaker_dirs),
                   unit="speakers"))
@@ -137,9 +140,10 @@ def _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir,
 #     _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, 'wav', skip_existing, logger)
 
 # preprocess the training data of MAGICDATA/train (SLR68), dataset url: http://www.openslr.org/68/
-def preprocess_MAGICDATA(datasets_root: Path, out_dir: Path, skip_existing=False):
-    dataset_name = 'MAGICDATA_train'
-    dataset_root, logger = _init_preprocess_dataset(dataset_name, datasets_root, out_dir)
+def preprocess_SLR68(datasets_root: Path, out_dir: Path, skip_existing=False):
+    dataset_name = 'SLR68/train'
+    # print("4234234", dataset_name, flush=True) # DEBUG
+    dataset_root, logger = _init_preprocess_dataset(dataset_name, datasets_root, out_dir) # data_dir/SLR68/train
     if not dataset_root:
         return
     all_sub_dirs = list(dataset_root.glob('*'))
