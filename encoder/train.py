@@ -46,7 +46,7 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
     if not force_restart:
         if state_fpath.exists():
             print("Found existing model \"%s\", loading it and resuming training." % run_id)
-            checkpoint = torch.load(state_fpath)
+            checkpoint = torch.load(str(state_fpath))
             init_step = checkpoint["step"]
             model.load_state_dict(checkpoint["model_state"])
             optimizer.load_state_dict(checkpoint["optimizer_state"])
@@ -82,6 +82,7 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         profiler.tick("Forward pass")
         embeds_loss = embeds.view((speakers_per_batch, utterances_per_speaker, -1)).to(loss_device)
         loss, eer = model.loss(embeds_loss)
+        # print(loss.item(), flush=True)
         total_loss += loss.detach().numpy()
         total_eer += eer
         sync(loss_device)
@@ -116,7 +117,8 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
                   "Step %06d>"
                   "    Saving the model, %d step cost %d seconds"
                   "    Avg_loss:%.4f, Avg_eer:%.4f." % (
-                      step, save_every, cost_time, loss.detach().numpy(), eer), flush=True)
+                    #   step, save_every, cost_time, loss.detach().numpy(), eer), flush=True)
+                    step, save_every, cost_time, loss.item(), eer), flush=True)
             torch.save({
                 "step": step + 1,
                 "model_state": model.state_dict(),
