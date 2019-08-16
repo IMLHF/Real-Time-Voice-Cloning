@@ -6,13 +6,15 @@ if [ -z "$1" ]; then
 fi
 
 GPU_DEVICES="2"
-
 step=$1
+
 if [ "$step" = "encoder_preprocess" ]; then
-    python3 encoder_preprocess.py --datasets_root=/home/zhangwenbo5/corpus \
+    python3.5 encoder_preprocess.py --datasets_root=/home/zhangwenbo5/corpus \
                                   --datasets=SLR68 \
                                   2>&1 | tee -a log_lhf/encoder_preprocess.log
-elif [ "$step" = "encoder_train" ]; then
-    CUDA_VISIBLE_DEVICES=$GPU_DEVICES python3 encoder_train.py --clean_data_root=/home/zhangwenbo5/corpus/SLR68/SV2TTS/encoder \
+elif [ "$step" = "encoder_train" ]; then # pytorch
+    CUDA_VISIBLE_DEVICES=$GPU_DEVICES python3.5 encoder_train.py --clean_data_root=/home/zhangwenbo5/corpus/SV2TTS/encoder \
                                                                2>&1 | tee -a log_lhf/encoder_train.log
+elif [ "$step" = "synthesizer_preprocess_audio" ]; then
+    python3.5 synthesizer_preprocess_audio.py /home/zhangwenbo5/corpus SLR68
 fi
