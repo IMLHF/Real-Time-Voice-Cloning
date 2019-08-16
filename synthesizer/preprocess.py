@@ -18,6 +18,25 @@ def preprocess_librispeech(datasets_root: Path, out_dir: Path, n_processes: int,
                   dataset_root.joinpath("train-clean-360")]
     print("\n    ".join(map(str, ["Using data from:"] + input_dirs)))
     assert all(input_dir.exists() for input_dir in input_dirs)
+    speaker_dirs = list(chain.from_iterable(input_dir.glob("*") for input_dir in input_dirs))
+
+    preprocess_datasets(speaker_dirs, out_dir, n_processes, skip_existing)
+
+
+# SLR68
+def preprocess_SLR68(datasets_root: Path, out_dir: Path, n_processes: int,
+                     skip_existing: bool, hparams):
+    dataset_root = datasets_root.joinpath("SLR68")
+    input_dirs = [dataset_root.joinpath("train")]
+    print("\n    ".join(map(str, ["Using data from:"] + input_dirs)))
+    assert all(input_dir.exists() for input_dir in input_dirs)
+    speaker_dirs = list(chain.from_iterable(input_dir.glob("*") for input_dir in input_dirs))
+
+    preprocess_datasets(speaker_dirs, out_dir, n_processes, skip_existing)
+
+
+def preprocess_datasets(speaker_dirs: list, out_dir: Path, n_processes: int,
+                        skip_existing: bool, hparams):
     
     # Create the output directories for each output file type
     out_dir.joinpath("mels").mkdir(exist_ok=True)
@@ -28,7 +47,6 @@ def preprocess_librispeech(datasets_root: Path, out_dir: Path, n_processes: int,
     metadata_file = metadata_fpath.open("a" if skip_existing else "w", encoding="utf-8")
 
     # Preprocess the dataset
-    speaker_dirs = list(chain.from_iterable(input_dir.glob("*") for input_dir in input_dirs))
     func = partial(preprocess_speaker, out_dir=out_dir, skip_existing=skip_existing, 
                    hparams=hparams)
     job = Pool(n_processes).imap(func, speaker_dirs)
