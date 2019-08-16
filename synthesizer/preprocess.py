@@ -10,34 +10,93 @@ import numpy as np
 import librosa
 
 
-def preprocess_librispeech(datasets_root: Path, out_dir: Path, n_processes: int, 
-                           skip_existing: bool, hparams):
-    # Gather the input directories
-    dataset_root = datasets_root.joinpath("LibriSpeech")
-    input_dirs = [dataset_root.joinpath("train-clean-100"), 
-                  dataset_root.joinpath("train-clean-360")]
-    print("\n    ".join(map(str, ["Using data from:"] + input_dirs)))
-    assert all(input_dir.exists() for input_dir in input_dirs)
-    speaker_dirs = list(chain.from_iterable(input_dir.glob("*") for input_dir in input_dirs))
-
-    preprocess_datasets(speaker_dirs, out_dir, n_processes, skip_existing)
-
-
-# SLR68
-def preprocess_SLR68(datasets_root: Path, out_dir: Path, n_processes: int,
+# region SLR68
+def preprocess_SLR68(datasets_root: Path, dataset: str, out_dir: Path, n_processes: int,
                      skip_existing: bool, hparams):
     dataset_root = datasets_root.joinpath("SLR68")
     input_dirs = [dataset_root.joinpath("train")]
     print("\n    ".join(map(str, ["Using data from:"] + input_dirs)))
     assert all(input_dir.exists() for input_dir in input_dirs)
-    speaker_dirs = list(chain.from_iterable(input_dir.glob("*") for input_dir in input_dirs))
-
-    preprocess_datasets(speaker_dirs, out_dir, n_processes, skip_existing)
-
-
-def preprocess_datasets(speaker_dirs: list, out_dir: Path, n_processes: int,
-                        skip_existing: bool, hparams):
+    all_sub_dirs = list(chain.from_iterable(input_dir.glob("*") for input_dir in input_dirs))
+    speaker_dirs = []
+    for _dir in all_sub_dirs:
+        if _dir.is_file(): continue
+        speaker_dirs.append(_dir)
     
+    _preprocess_speakers(speaker_dirs, dataset, "wav", _preprocess_speaker_SLR68, out_dir, n_processes, skip_existing, hparams)
+
+
+def _preprocess_speaker_SLR68(speaker_dir, suffix, out_dir: Path, skip_existing: bool, hparams):
+    # TODO:
+    metadata = []
+    # # Iterate over each entry in the alignments file
+    # for wav_fname, words, end_times in alignments:
+    #     wav_fpath = book_dir.joinpath(".".join(wav_fname, suffix))
+    #     assert wav_fpath.exists()
+    #     words = words.replace("\"", "").split(",")
+    #     end_times = list(map(float, end_times.replace("\"", "").split(",")))
+        
+    #     # Process each sub-utterance
+    #     wavs, texts = split_on_silences(wav_fpath, words, end_times, hparams)
+    #     for i, (wav, text) in enumerate(zip(wavs, texts)):
+    #         sub_basename = "%s_%02d" % (wav_fname, i)
+    #         metadata.append(process_utterance(wav, text, out_dir, sub_basename,
+    #                                           skip_existing, hparams))
+    return [m for m in metadata if m is not None]
+# endregion SLR68
+
+# region librispeech
+def preprocess_librispeech(datasets_root: Path, dataset: str, out_dir: Path, n_processes: int, 
+                           skip_existing: bool, hparams):
+    # Gather the input directories
+    dataset_root = datasets_root.joinpath("LibriSpeech")
+    input_dirs = [
+        # dataset_root.joinpath("train-clean-100"),
+        # dataset_root.joinpath("train-clean-360"),
+        dataset_root.joinpath("train-other-500"),
+    ]
+    print("\n    ".join(map(str, ["Using data from:"] + input_dirs)))
+    assert all(input_dir.exists() for input_dir in input_dirs)
+    all_sub_dirs = list(chain.from_iterable(input_dir.glob("*") for input_dir in input_dirs))
+    speaker_dirs = []
+    for _dir in all_sub_dirs:
+        if _dir.is_file(): continue
+        speaker_dirs.append(_dir)
+    _preprocess_speakers(speaker_dirs, dataset, "flac", _preprocess_speaker_librispeech, out_dir, n_processes, skip_existing, hparams)
+    
+
+def _preprocess_speaker_librispeech(speaker_dir, suffix, out_dir: Path, skip_existing: bool, hparams):
+    metadata = []
+    for book_dir in speaker_dir.glob("*"):
+        # Gather the utterance audios and texts
+        try:
+            alignments_fpath = next(book_dir.glob("*.alignment.txt"))
+            with alignments_fpath.open("r") as alignments_file:
+                alignments = [line.rstrip().split(" ") for line in alignments_file]
+        except StopIteration:
+            # A few alignment files will be missing
+            continue
+        
+        # Iterate over each entry in the alignments file
+        for wav_fname, words, end_times in alignments:
+            wav_fpath = book_dir.joinpath(".".join([wav_fname, suffix]))
+            assert wav_fpath.exists()
+            words = words.replace("\"", "").split(",")
+            end_times = list(map(float, end_times.replace("\"", "").split(",")))
+            
+            # Process each sub-utterance
+            wavs, texts = split_on_silences(wav_fpath, words, end_times, hparams)
+            for i, (wav, text) in enumerate(zip(wavs, texts)):
+                sub_basename = "%s_%02d" % (wav_fname, i)
+                metadata.append(process_utterance(wav, text, out_dir, sub_basename, 
+                                                  skip_existing, hparams))
+    return [m for m in metadata if m is not None]
+# endregion librispeech
+
+
+def _preprocess_speakers(speaker_dirs: list, dataset: str, wav_suffix: str, preprocess_speaker_fn,
+                         out_dir: Path, n_processes: int, skip_existing: bool, hparams):
+    # per-speaker
     # Create the output directories for each output file type
     out_dir.joinpath("mels").mkdir(exist_ok=True)
     out_dir.joinpath("audio").mkdir(exist_ok=True)
@@ -47,10 +106,16 @@ def preprocess_datasets(speaker_dirs: list, out_dir: Path, n_processes: int,
     metadata_file = metadata_fpath.open("a" if skip_existing else "w", encoding="utf-8")
 
     # Preprocess the dataset
-    func = partial(preprocess_speaker, out_dir=out_dir, skip_existing=skip_existing, 
-                   hparams=hparams)
+    func = partial(preprocess_speaker_fn, suffix=wav_suffix, out_dir=out_dir, 
+                   skip_existing=skip_existing, hparams=hparams)
+    # for speaker_dir in speaker_dirs: # DEBUG
+    #     print(speaker_dir)
+    #     speaker_metadata = func(speaker_dir)
+    #     for metadatum in speaker_metadata:
+    #         metadata_file.write("|".join(str(x) for x in metadatum) + "\n")
+    #     break
     job = Pool(n_processes).imap(func, speaker_dirs)
-    for speaker_metadata in tqdm(job, "LibriSpeech", len(speaker_dirs), unit="speakers"):
+    for speaker_metadata in tqdm(job, dataset, len(speaker_dirs), unit="speakers"):
         for metadatum in speaker_metadata:
             metadata_file.write("|".join(str(x) for x in metadatum) + "\n")
     metadata_file.close()
@@ -69,38 +134,9 @@ def preprocess_datasets(speaker_dirs: list, out_dir: Path, n_processes: int,
     print("Max audio timesteps length: %d" % max(int(m[3]) for m in metadata))
 
 
-def preprocess_speaker(speaker_dir, out_dir: Path, skip_existing: bool, hparams):
-    metadata = []
-    for book_dir in speaker_dir.glob("*"):
-        # Gather the utterance audios and texts
-        try:
-            alignments_fpath = next(book_dir.glob("*.alignment.txt"))
-            with alignments_fpath.open("r") as alignments_file:
-                alignments = [line.rstrip().split(" ") for line in alignments_file]
-        except StopIteration:
-            # A few alignment files will be missing
-            continue
-        
-        # Iterate over each entry in the alignments file
-        for wav_fname, words, end_times in alignments:
-            wav_fpath = book_dir.joinpath(wav_fname + ".flac")
-            assert wav_fpath.exists()
-            words = words.replace("\"", "").split(",")
-            end_times = list(map(float, end_times.replace("\"", "").split(",")))
-            
-            # Process each sub-utterance
-            wavs, texts = split_on_silences(wav_fpath, words, end_times, hparams)
-            for i, (wav, text) in enumerate(zip(wavs, texts)):
-                sub_basename = "%s_%02d" % (wav_fname, i)
-                metadata.append(process_utterance(wav, text, out_dir, sub_basename, 
-                                                  skip_existing, hparams))
-    
-    return [m for m in metadata if m is not None]
-
-
 def split_on_silences(wav_fpath, words, end_times, hparams):
     # Load the audio waveform
-    wav, _ = librosa.load(wav_fpath, hparams.sample_rate)
+    wav, _ = librosa.load(str(wav_fpath), hparams.sample_rate)
     if hparams.rescale:
         wav = wav / np.abs(wav).max() * hparams.rescaling_max
     
@@ -113,7 +149,7 @@ def split_on_silences(wav_fpath, words, end_times, hparams):
     # Find pauses that are too long
     mask = (words == "") & (end_times - start_times >= hparams.silence_min_duration_split)
     mask[0] = mask[-1] = True
-    breaks = np.where(mask)[0]
+    breaks = np.where(mask)[0] # first dim indexs
 
     # Profile the noise from the silences and perform noise reduction on the waveform
     silence_times = [[start_times[i], end_times[i]] for i in breaks]
@@ -123,7 +159,7 @@ def split_on_silences(wav_fpath, words, end_times, hparams):
         profile = logmmse.profile_noise(noisy_wav, hparams.sample_rate)
         wav = logmmse.denoise(wav, profile, eta=0)
     
-    # Re-attach segments that are too short
+    # Re-attach(Re-join) segments that are too short
     segments = list(zip(breaks[:-1], breaks[1:]))
     segment_durations = [start_times[end] - end_times[start] for start, end in segments]
     i = 0
@@ -150,8 +186,8 @@ def split_on_silences(wav_fpath, words, end_times, hparams):
     # Split the utterance
     segment_times = [[end_times[start], start_times[end]] for start, end in segments]
     segment_times = (np.array(segment_times) * hparams.sample_rate).astype(np.int)
-    wavs = [wav[segment_time[0]:segment_time[1]] for segment_time in segment_times]
-    texts = [" ".join(words[start + 1:end]).replace("  ", " ") for start, end in segments]
+    wavs = [wav[segment_time[0]:segment_time[1]] for segment_time in segment_times] # [N_seg, seg_time]
+    texts = [" ".join(words[start + 1:end]).replace("  ", " ") for start, end in segments] # [N_seg, n_words]
     
     # # DEBUG: play the audio segments (run with -n=1)
     # import sounddevice as sd

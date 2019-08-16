@@ -16,7 +16,7 @@ if __name__ == "__main__":
                         help="Path to the directory containing your LibriSpeech/TTS datasets.")
     parser.add_argument("dataset", type=str,
                         help="Comma-separated list of the name of the dataset you want to preprocess. "
-                        "Possible names: librispeech, SLR68.")
+                        "Possible names: LibriSpeech, SLR68.")
     parser.add_argument("-o", "--out_dir", type=Path, default=argparse.SUPPRESS, 
                         help="Path to the output directory that will contain the mel spectrograms,"
                         " the audios and the embeds. Defaults to <datasets_root>/SV2TTS/synthesizer/")
@@ -42,8 +42,9 @@ if __name__ == "__main__":
     args.hparams = hparams.parse(args.hparams) 
     
     preprocess_func = {
-        "librispeech": preprocess_librispeech,
+        "LibriSpeech": preprocess_librispeech,
         "SLR68": preprocess_SLR68
     }
     print("Preprocessing %s" % args.dataset)
-    preprocess_func[args.ataset](**vars(args)) 
+    assert args.dataset in preprocess_func, 'not surpport such dataset'
+    preprocess_func[args.dataset](**vars(args)) 
