@@ -108,6 +108,7 @@ def model_test_mode(args, feeder, hparams, global_step):
 
 
 def train(log_dir, args, hparams):
+    log_dir = str(log_dir)
     save_dir = os.path.join(log_dir, "taco_pretrained")
     plot_dir = os.path.join(log_dir, "plots")
     wav_dir = os.path.join(log_dir, "wavs")
@@ -128,7 +129,7 @@ def train(log_dir, args, hparams):
     os.makedirs(meta_folder, exist_ok=True)
     
     checkpoint_fpath = os.path.join(save_dir, "tacotron_model.ckpt")
-    metadat_fpath = os.path.join(args.synthesizer_root, "train.txt")
+    metadat_fpath = os.path.join(str(args.synthesizer_root), "train.txt")
     
     log("Checkpoint path: {}".format(checkpoint_fpath))
     log("Loading training data from: {}".format(metadat_fpath))
@@ -213,7 +214,7 @@ def train(log_dir, args, hparams):
                 message = "Step {:7d} [{:.3f} sec/step, loss={:.5f}, avg_loss={:.5f}]".format(
                     step, time_window.average, loss, loss_window.average)
                 log(message, end="\r", slack=(step % args.checkpoint_interval == 0))
-                print(message)
+                print(message, flush=True)
                 
                 if loss > 100 or np.isnan(loss):
                     log("Loss exploded to {:.5f} at step {}".format(loss, step))
