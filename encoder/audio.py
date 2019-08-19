@@ -96,8 +96,8 @@ def trim_long_silences(wav):
     # Dilate the voiced regions
     audio_mask = binary_dilation(audio_mask, np.ones(vad_max_silence_length + 1))
     audio_mask = np.repeat(audio_mask, samples_per_window)
-    
-    return wav[audio_mask is True]
+
+    return wav[audio_mask == 1]
 
 
 def normalize_volume(wav, target_dBFS, increase_only=False, decrease_only=False):
