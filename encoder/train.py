@@ -1,6 +1,6 @@
 from encoder.visualizations import Visualizations
 from encoder.data_objects import SpeakerVerificationDataLoader, SpeakerVerificationDataset
-from encoder.params_model import speakers_per_batch, utterances_per_speaker, learning_rate_init
+from encoder.params_model import speakers_per_batch, utterances_per_speaker, learning_rate_init, dataloader_workers
 from encoder.model import SpeakerEncoder
 from utils.profiler import Profiler
 from pathlib import Path
@@ -23,7 +23,7 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         dataset,
         speakers_per_batch,
         utterances_per_speaker,
-        num_workers=8,
+        num_workers=dataloader_workers,
     )
     
     # Setup the device on which to run the forward pass and the loss. These can be different, 
