@@ -280,7 +280,7 @@ def create_embeddings(synthesizer_root: Path, encoder_model_fpath: Path, n_proce
     # Gather the input wave filepath and the target output embed filepath
     with metadata_fpath.open("r") as metadata_file:
         metadata = [line.split("|") for line in metadata_file]
-        fpaths = [(wav_dir.joinpath(m[0]), embed_dir.joinpath(m[2])) for m in metadata]
+        fpaths = [(str(wav_dir.joinpath(m[0])), str(embed_dir.joinpath(m[2]))) for m in metadata]
         
     # TODO: improve on the multiprocessing, it's terrible. Disk I/O is the bottleneck here.
     # Embed the utterances in separate threads
