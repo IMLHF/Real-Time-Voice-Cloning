@@ -391,8 +391,8 @@ class WaveRNN(nn.Module):
         with open(path, 'a') as f:
             print(msg, file=f)
 
-    def load(self, path, optimizer) :
-        checkpoint = torch.load(path)
+    def load(self, path, optimizer):
+        checkpoint = torch.load(str(path))
         if "optimizer_state" in checkpoint:
             self.load_state_dict(checkpoint["model_state"])
             optimizer.load_state_dict(checkpoint["optimizer_state"])
