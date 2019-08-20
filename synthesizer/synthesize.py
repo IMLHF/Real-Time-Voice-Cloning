@@ -27,7 +27,7 @@ def run_eval(args, checkpoint_path, output_dir, hparams, sentences):
     log("Starting Synthesis")
     with open(os.path.join(eval_dir, "map.txt"), "w") as file:
         for i, texts in enumerate(tqdm(sentences)):
-            start = time.time()
+            # start = time.time()
             basenames = ["batch_{}_sentence_{}".format(i, j) for j in range(len(texts))]
             mel_filenames, speaker_ids = synth.synthesize(texts, basenames, eval_dir, log_dir, None)
             
@@ -79,4 +79,3 @@ def run_synthesis(in_dir, out_dir, model_dir, hparams):
                 
     print("Synthesized mel spectrograms at {}".format(synth_dir))
     return meta_out_fpath
-
