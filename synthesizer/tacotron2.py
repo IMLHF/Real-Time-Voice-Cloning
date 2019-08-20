@@ -179,7 +179,8 @@ class Tacotron2:
             assert len(mels) == len(linears) == len(texts)
         
         if basenames is None:
-            raise NotImplemented()
+            # raise NotImplemented()
+            raise NotImplementedError
         
         saved_mels_paths = []
         for i, mel in enumerate(mels):
