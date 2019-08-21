@@ -102,10 +102,10 @@ def train(run_id: str, syn_dir: Path, voc_dir: Path, models_dir: Path, ground_tr
             step = model.get_step()
             k = step // 1000
 
-            if backup_every != 0 and step % backup_every == 0 :
+            if backup_every != 0 and step % backup_every == 0:
                 model.checkpoint(model_dir, optimizer)
                 
-            if save_every != 0 and step % save_every == 0 :
+            if save_every != 0 and step % save_every == 0:
                 model.save(weights_fpath, optimizer)
 
             msg = f"| Epoch: {epoch} ({i}/{len(data_loader)}) | " \
