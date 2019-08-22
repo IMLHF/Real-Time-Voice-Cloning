@@ -54,6 +54,8 @@ def get_pinyin(text, std=True, pb=True):
     pinyins = []
     for s in sents:
         py = _get_pinyin(s, std, pb)
+        py = py.replace(",", " ,").replace(".", " .").replace(";", " ;").replace("!", " !").replace("?", " ?")
+        py = py.strip()
         pinyins.append(py)
     pinyin = pinyins
     return pinyin
