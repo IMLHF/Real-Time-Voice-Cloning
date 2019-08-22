@@ -13,7 +13,7 @@ rm */*/__pycache__ -rf
 
 echo "To P40:/DATA/disk1/lihongfeng/$dest"
 # exit 0
-rsync -av -e "ssh -p 22 -o ProxyCommand='ssh -p 8695 zhangwenbo5@120.92.114.84 -W %h:%p'" --exclude-from='.vscode/exclude.lst' ./* zhangwenbo5@ksai-P40-2:/DATA/disk1/lihongfeng/$dest
+rsync -avhP -e "ssh -p 22 -o ProxyCommand='ssh -p 8695 zhangwenbo5@120.92.114.84 -W %h:%p'" --exclude-from='.vscode/exclude.lst' ./* zhangwenbo5@ksai-P40-2:/DATA/disk1/lihongfeng/$dest
 
 # rsync -av -e 'ssh -p 15043' --exclude-from='.vscode/exclude.lst' ./* room@speaker.is99kdf.xyz:~/work/speech_synthesis/$1
 
