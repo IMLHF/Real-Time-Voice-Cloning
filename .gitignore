@@ -23,3 +23,4 @@ log_lhf
 toolbox
 demo_cli.py
 demo_toolbox.py
+/synthesizer/training_step_sampling_audio
