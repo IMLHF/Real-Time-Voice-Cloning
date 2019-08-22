@@ -299,13 +299,25 @@ def splitPar(sr):
     sents=[]
     for i, itm in enumerate(lst):
         if itm in list(',，、；;《<'):
-            sents[-1] += ', '
+            if len(sents)>0:
+                sents[-1] += ', ' 
+            else:
+                sents.append(", ")
         elif itm in list('｡。……'.strip()):
-            sents[-1] += '. '
+            if len(sents)>0:
+                sents[-1] += '. ' 
+            else:
+                sents.append(". ")
         elif itm in list('!！'.strip()):
-            sents[-1] += '! '
+            if len(sents)>0:
+                sents[-1] += '! ' 
+            else:
+                sents.append("! ")
         elif itm in list('?？'.strip()):
-            sents[-1] += '?'
+            if len(sents)>0:
+                sents[-1] += '?'
+            else:
+                sents.append("? ")
         elif itm != u'':
             itm = procMathMark(itm)
             st=pat_punc.sub(u'', itm)
