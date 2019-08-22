@@ -81,8 +81,16 @@ def transliteration_cleaners(text):
 def english_cleaners(text):
   """Pipeline for English text, including number and abbreviation expansion."""
   text = convert_to_ascii(text)
+  # print(text)
   text = lowercase(text)
+  # print(text)
   text = expand_numbers(text)
+  # print(text)
   text = expand_abbreviations(text)
+  # print(text)
   text = collapse_whitespace(text)
+  # print(text)
   return text
+
+if __name__ == "__main__":
+  print(english_cleaners("外孙大  战奥特曼233"))
