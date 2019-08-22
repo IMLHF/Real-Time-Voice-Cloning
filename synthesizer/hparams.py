@@ -4,7 +4,7 @@ from tensorflow.contrib.training import HParams
 hparams = HParams(
     # Comma-separated list of cleaners to run on text prior to training and eval. For non-English
     # text, you may want to use "basic_cleaners" or "transliteration_cleaners".
-    cleaners="english_cleaners",
+    cleaners="basic_cleaners",
     
     # If you only have 1 GPU or want to use only one GPU, please set num_gpus=0 and specify the 
     # GPU idx on run. example:
@@ -45,7 +45,7 @@ hparams = HParams(
     # WaveNet does not support multi GPU yet, WIP)
     # Synthesis also uses the following hardware parameters for multi-GPU parallel synthesis.
     tacotron_gpu_start_idx=0,  # idx of the first GPU to be used for Tacotron training.
-    tacotron_num_gpus=1,  # Determines the number of gpus in use for Tacotron training.
+    tacotron_num_gpus=2,  # Determines the number of gpus in use for Tacotron training.
     split_on_cpu=True,
     # Determines whether to split data on CPU or on first GPU. This is automatically True when 
     # more than 1 GPU is used.
@@ -240,7 +240,7 @@ hparams = HParams(
     # major slowdowns! Only use when critical!)
     
     # train/test split ratios, mini-batches sizes
-    tacotron_batch_size=36,  # number of training samples on each training steps (was 32)
+    tacotron_batch_size=160, # init=36  # number of training samples on each training steps (was 32)
     # Tacotron Batch synthesis supports ~16x the training batch size (no gradients during 
     # testing). 
     # Training Tacotron with unmasked paddings makes it aware of them, which makes synthesis times
