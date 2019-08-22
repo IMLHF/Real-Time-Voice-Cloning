@@ -51,7 +51,7 @@ def _preprocess_speaker_SLR68(speaker_dir, suffix, out_dir: Path, skip_existing:
         text = trans_dict[wav_fpath.name]["text"]
 
         # Chinese to Pinyin
-        pinyin = get_pinyin(text, pb=True)
+        pinyin = " ".join(get_pinyin(text, std=True, pb=True))
 
         # print(wav_fpath.name, wav_fpath.stem)
         metadata.append(process_utterance(wav, pinyin, out_dir, wav_fpath.stem,
