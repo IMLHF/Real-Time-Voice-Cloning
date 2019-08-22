@@ -8,6 +8,7 @@ from utils import logmmse
 from tqdm import tqdm
 import numpy as np
 import librosa
+from synthesizer.textnorm import get_pinyin
 
 
 # region SLR68
@@ -48,8 +49,12 @@ def _preprocess_speaker_SLR68(speaker_dir, suffix, out_dir: Path, skip_existing:
         # Process each utterance
         wav, _ = librosa.load(str(wav_fpath), hparams.sample_rate)
         text = trans_dict[wav_fpath.name]["text"]
+
+        # Chinese to Pinyin
+        pinyin = get_pinyin(text, pb=True)
+
         # print(wav_fpath.name, wav_fpath.stem)
-        metadata.append(process_utterance(wav, text, out_dir, wav_fpath.stem,
+        metadata.append(process_utterance(wav, pinyin, out_dir, wav_fpath.stem,
                                           skip_existing, hparams))
     return [m for m in metadata if m is not None]
 # endregion SLR68
