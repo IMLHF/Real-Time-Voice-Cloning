@@ -23,7 +23,19 @@
 #
 # This code was extracted from the logmmse package (https://pypi.org/project/logmmse/) and I
 # simply modified the interface to meet my needs.
+'''
+usage
 
+wav, _ = librosa.load(str(wav_fpath), hparams.sample_rate)
+wav = wav / np.max(np.abs(wav)) * 0.9 # norm
+
+# denoise
+if len(wav) > hparams.sample_rate*(0.3+0.1):
+    noise_wav = np.concatenate([wav[:int(hparams.sample_rate*0.15)],
+                                wav[-int(hparams.sample_rate*0.15):]])
+    profile = logmmse.profile_noise(noise_wav, hparams.sample_rate)
+    wav = logmmse.denoise(wav, profile, eta=0)
+'''
 
 import numpy as np
 import math
