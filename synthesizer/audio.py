@@ -9,6 +9,11 @@ from scipy.io import wavfile
 def load_wav(path, sr):
     return librosa.core.load(path, sr=sr)[0]
 
+def trim_silence(wav, top_db=60):
+    # top_db : set larger for clear speech, set small for noisy speech
+    return librosa.effects.trim(wav, top_db=top_db, frame_length=512, hop_length=128)[0]
+
+
 def save_wav(wav, path, sr):
     wav *= 32767 / max(0.01, np.max(np.abs(wav)))
     #proposed by @dsmiller
