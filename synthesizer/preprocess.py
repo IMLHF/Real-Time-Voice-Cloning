@@ -48,6 +48,22 @@ def _preprocess_speaker_SLR68(speaker_dir, suffix, out_dir: Path, skip_existing:
 
         # Process each utterance
         wav, _ = librosa.load(str(wav_fpath), hparams.sample_rate)
+        # wav_bak = wav
+        wav = wav / np.max(np.abs(wav)) * 0.9 # norm
+
+        # denoise
+        if len(wav) > hparams.sample_rate*(0.3+0.1):
+          noise_wav = np.concatenate([wav[:int(hparams.sample_rate*0.15)],
+                                      wav[-int(hparams.sample_rate*0.15):]])
+          profile = logmmse.profile_noise(noise_wav, hparams.sample_rate)
+          wav = logmmse.denoise(wav, profile, eta=0)
+
+        # trim silence
+        wav = audio.trim_silence(wav, 20) # top_db: smaller for noisy
+        # audio.save_wav(wav_bak, str(wav_fpath.name), hparams.sample_rate)
+        # audio.save_wav(wav, str(wav_fpath.name).replace('.wav','_trimed.wav'), 
+        #                hparams.sample_rate)
+
         text = trans_dict[wav_fpath.name]["text"]
 
         # Chinese to Pinyin
