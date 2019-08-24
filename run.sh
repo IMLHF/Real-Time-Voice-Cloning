@@ -19,8 +19,8 @@ elif [ "$step" = "synthesizer_preprocess_audio" ]; then
     python3.5 synthesizer_preprocess_audio.py /home/zhangwenbo5/corpus SLR68 \
                                               2>&1 | tee -a log_lhf/synthesizer_preprocess_audio.log
 elif [ "$step" = "synthesizer_preprocess_embeds" ]; then
-    python3.5 synthesizer_preprocess_embeds.py /home/zhangwenbo5/corpus \
-                                               2>&1 | tee -a log_lhf/synthesizer_preprocess_embeds.log
+    CUDA_VISIBLE_DEVICES=$GPU_DEVICES python3.5 synthesizer_preprocess_embeds.py /home/zhangwenbo5/corpus \
+                                                                                 2>&1 | tee -a log_lhf/synthesizer_preprocess_embeds.log
 elif [ "$step" = "synthesizer_train" ]; then
     CUDA_VISIBLE_DEVICES=$GPU_DEVICES python3.5 synthesizer_train.py synthesizer /home/zhangwenbo5/corpus \
                                                                      2>&1 | tee -a log_lhf/synthesizer_train.log
