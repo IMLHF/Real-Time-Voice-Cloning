@@ -49,7 +49,7 @@ def _preprocess_speaker_SLR68(speaker_dir, suffix, out_dir: Path, skip_existing:
         # Process each utterance
         wav, _ = librosa.load(str(wav_fpath), hparams.sample_rate)
         # wav_bak = wav
-        wav = wav / np.max(np.abs(wav)) * 0.9 # norm
+        wav = wav / np.max(np.abs(wav)) * hparams.rescaling_max # norm
 
         # denoise
         if len(wav) > hparams.sample_rate*(0.3+0.1):
@@ -168,8 +168,7 @@ def _preprocess_speakers(speaker_dirs: list, dataset: str, wav_suffix: str, prep
 def split_on_silences(wav_fpath, words, end_times, hparams):
     # Load the audio waveform
     wav, _ = librosa.load(str(wav_fpath), hparams.sample_rate)
-    if hparams.rescale:
-        wav = wav / np.abs(wav).max() * hparams.rescaling_max
+    wav = wav / np.abs(wav).max() * hparams.rescaling_max
 
     words = np.array(words)
     start_times = np.array([0.0] + end_times[:-1])

@@ -90,7 +90,6 @@ hparams = HParams(
     # showing black silent regions on top), then restart from step 2.
     num_mels=80,  # Number of mel-spectrogram channels and local conditioning dimensionality
     #  network
-    rescale=True,  # Whether to rescale audio prior to preprocessing
     rescaling_max=0.9,  # Rescaling value
     # Whether to clip silence in Audio (at beginning and end of audio only, not the middle)
     # train samples of lengths between 3sec and 14sec are more than enough to make a model capable
@@ -240,7 +239,7 @@ hparams = HParams(
     # major slowdowns! Only use when critical!)
     
     # train/test split ratios, mini-batches sizes
-    tacotron_batch_size=160, # init=36  # number of training samples on each training steps (was 32)
+    tacotron_batch_size=144, # init=36  # number of training samples on each training steps (was 32)
     # Tacotron Batch synthesis supports ~16x the training batch size (no gradients during 
     # testing). 
     # Training Tacotron with unmasked paddings makes it aware of them, which makes synthesis times
