@@ -122,7 +122,7 @@ class Tacotron():
         for i in range(hp.tacotron_num_gpus):
             with tf.device(tf.train.replica_device_setter(ps_tasks=1, ps_device="/cpu:0",
                                                           worker_device=gpus[i])):
-                with tf.variable_scope("inference"):
+                with tf.variable_scope("inference", reuse=tf.AUTO_REUSE):
                     assert hp.tacotron_teacher_forcing_mode in ("constant", "scheduled")
                     if hp.tacotron_teacher_forcing_mode == "scheduled" and is_training:
                         assert global_step is not None
