@@ -29,11 +29,11 @@ def load_model(weights_fpath: Path, device=None):
         _device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     elif isinstance(device, str):
         _device = torch.device(device)
-    _model = SpeakerEncoder(_device, torch.device("cpu"))
-    checkpoint = torch.load(str(weights_fpath))
+    _model = SpeakerEncoder(_device, _device)
+    checkpoint = torch.load(str(weights_fpath), map_location=_device)
     _model.load_state_dict(checkpoint["model_state"])
     _model.eval()
-    print("Loaded encoder \"%s\" trained to step %d" % (weights_fpath.name, checkpoint["step"]))
+    print("Loaded encoder \"%s\" trained to step %d" % (Path(weights_fpath).name, checkpoint["step"]))
     
     
 def is_loaded():
