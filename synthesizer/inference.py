@@ -3,6 +3,7 @@ from synthesizer.hparams import hparams
 from multiprocess.pool import Pool  # You're free to use either one
 #from multiprocessing import Pool   # 
 from synthesizer import audio
+from utils import logmmse
 from pathlib import Path
 from typing import Union, List
 import tensorflow as tf
@@ -34,20 +35,22 @@ class Synthesizer:
         self._model = None  # type: Tacotron2
         checkpoint_state = tf.train.get_checkpoint_state(checkpoints_dir)
         if checkpoint_state is None:
-            raise Exception("Could not find any synthesizer weights under %s" % checkpoints_dir)
-        self.checkpoint_fpath = checkpoint_state.model_checkpoint_path
+            # raise Exception("Could not find any synthesizer weights under %s" % checkpoints_dir)
+            self.checkpoint_fpath = checkpoints_dir
+        else:
+            self.checkpoint_fpath = checkpoint_state.model_checkpoint_path
         if verbose:
-            model_name = checkpoints_dir.parent.name.replace("logs-", "")
+            model_name = Path(checkpoints_dir).parent.name.replace("logs-", "")
             step = int(self.checkpoint_fpath[self.checkpoint_fpath.rfind('-') + 1:])
             print("Found synthesizer \"%s\" trained to step %d" % (model_name, step))
      
-    def is_loaded(self):
+    def _is_loaded(self):
         """
         Whether the model is loaded in GPU memory.
         """
         return self._model is not None
     
-    def load(self):
+    def _load(self):
         """
         Effectively loads the model to GPU memory given the weights file that was passed in the
         constructor.
@@ -73,8 +76,8 @@ class Synthesizer:
         """
         if not self._low_mem:
             # Usual inference mode: load the model on the first request and keep it loaded.
-            if not self.is_loaded():
-                self.load()
+            if not self._is_loaded():
+                self._load()
             specs, alignments = self._model.my_synthesize(embeddings, texts)
         else:
             # Low memory inference mode: load the model upon every request. The model has to be 
@@ -109,8 +112,18 @@ class Synthesizer:
         train the synthesizer. 
         """
         wav = librosa.load(fpath, hparams.sample_rate)[0]
-        if hparams.rescale:
-            wav = wav / np.abs(wav).max() * hparams.rescaling_max
+        wav = wav / np.abs(wav).max() * hparams.rescaling_max
+
+        # denoise
+        if len(wav) > hparams.sample_rate*(0.3+0.1):
+          noise_wav = np.concatenate([wav[:int(hparams.sample_rate*0.15)],
+                                      wav[-int(hparams.sample_rate*0.15):]])
+          profile = logmmse.profile_noise(noise_wav, hparams.sample_rate)
+          wav = logmmse.denoise(wav, profile, eta=0)
+
+        # trim silence
+        wav = audio.trim_silence(wav, 20) # top_db: smaller for noisy
+        
         return wav
 
     @staticmethod
