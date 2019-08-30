@@ -10,8 +10,63 @@ import numpy as np
 import librosa
 from synthesizer.textnorm import get_pinyin
 
+# region SLR38
+def preprocess_SLR38(datasets_root: Path, dataset: str, out_dir: Path, n_processes: int,
+                     skip_existing: bool, hparams):
+    dataset_root = datasets_root.joinpath("SLR38")
+    input_dir = dataset_root.joinpath("ST-CMDS-speaker-separated")
+    print("\n    Using data form:" + str(input_dir))
+    assert input_dir.exists(), str(input_dir)+" not exist."
+    all_sub_dirs = list(input_dir.glob("*"))
+    speaker_dirs = []
+    for _dir in all_sub_dirs:
+        if _dir.is_file(): continue
+        speaker_dirs.append(_dir)
 
-# region SLR68
+    _preprocess_speakers(speaker_dirs, dataset, "wav", _preprocess_speaker_SLR38, None,
+                         out_dir, n_processes, skip_existing, hparams)
+
+def _preprocess_speaker_SLR38(speaker_dir, suffix, out_dir: Path, skip_existing: bool, hparams, others_params):
+    wav_fpath_list = speaker_dir.glob("*."+suffix)
+    text_fpath_list = speaker_dir.glob("*.txt")
+    metadata = []
+    # Iterate over each wav
+    for wav_fpath, txt_fpath in zip(wav_fpath_list, text_fpath_list):
+        assert wav_fpath.exists(), str(wav_fpath)+" not exist."
+        assert txt_fpath.exists(), str(wav_fpath)+" not exist."
+
+        # Process each utt
+        wav, _ = librosa.load(str(wav_fpath), hparams.sample_rate)
+        wav = wav / np.max(np.abs(wav)) * hparams.rescaling_max 
+        # wav_bak = wav
+
+        # denoise
+        if len(wav) > hparams.sample_rate*(0.3+0.1):
+            noise_wav = np.concatenate([wav[:int(hparams.sample_rate*0.15)],
+                                        wav[-int(hparams.sample_rate*0.15):]])
+            profile = logmmse.profile_noise(noise_wav, hparams.sample_rate)
+            wav = logmmse.denoise(wav, profile, eta=0)
+
+        # trim silence
+        wav = audio.trim_silence(wav, 30)
+        # audio.save_wav(wav_bak, str(wav_fpath.name), hparams.sample_rate)
+        # audio.save_wav(wav, str(wav_fpath.name).replace('.wav','_trimed.wav'), 
+        #                hparams.sample_rate)
+
+        # get text
+        text = txt_fpath.read_text()
+
+        # Chinese to Pinyin
+        pinyin = " ".join(get_pinyin(text, std=True, pb=True))
+
+        # print(wav_fpath.name, wav_fpath.stem)
+        metadata.append(process_utterance(wav, pinyin, out_dir, wav_fpath.stem,
+                                          skip_existing, hparams))
+    return [m for m in metadata if m is not None]
+
+# endregion SLR38
+
+# region XX SLR68
 def preprocess_SLR68(datasets_root: Path, dataset: str, out_dir: Path, n_processes: int,
                      skip_existing: bool, hparams):
     dataset_root = datasets_root.joinpath("SLR68")
@@ -42,7 +97,7 @@ def _preprocess_speaker_SLR68(speaker_dir, suffix, out_dir: Path, skip_existing:
     trans_dict = others_params["trans_dict"]
     metadata = []
     wav_fpath_list = speaker_dir.glob("*."+suffix)
-    # Iterate over each entry in the alignments file
+    # Iterate over each wav
     for wav_fpath in wav_fpath_list:
         assert wav_fpath.exists(), str(wav_fpath)+" not exist."
 
