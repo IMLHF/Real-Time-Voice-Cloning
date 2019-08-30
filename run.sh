@@ -5,7 +5,7 @@ if [ -z "$1" ]; then
   exit -1
 fi
 
-GPU_DEVICES="2,3"
+GPU_DEVICES="3"
 step=$1
 
 if [ "$step" = "encoder_preprocess" ]; then
