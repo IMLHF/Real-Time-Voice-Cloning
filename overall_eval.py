@@ -107,3 +107,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+# python3 overall_eval.py ckpt_dir biaobei_speaker
