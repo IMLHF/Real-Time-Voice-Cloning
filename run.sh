@@ -16,7 +16,7 @@ elif [ "$step" = "encoder_train" ]; then # pytorch
     CUDA_VISIBLE_DEVICES=$GPU_DEVICES python3.5 encoder_train.py --clean_data_root=/home/zhangwenbo5/corpus/SV2TTS/encoder \
                                                                  2>&1 | tee -a log_lhf/encoder_train.log
 elif [ "$step" = "synthesizer_preprocess_audio" ]; then
-    python3.5 synthesizer_preprocess_audio.py /home/zhangwenbo5/corpus SLR68 \
+    python3.5 synthesizer_preprocess_audio.py /home/zhangwenbo5/corpus SLR38 \
                                               2>&1 | tee -a log_lhf/synthesizer_preprocess_audio.log
 elif [ "$step" = "synthesizer_preprocess_embeds" ]; then
     CUDA_VISIBLE_DEVICES=$GPU_DEVICES python3.5 synthesizer_preprocess_embeds.py /home/zhangwenbo5/corpus \
