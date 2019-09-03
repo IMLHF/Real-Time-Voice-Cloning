@@ -26,10 +26,15 @@ def run_eval_part1(args):
         "biaobei_speaker": ["/home/zhangwenbo5/lihongfeng/corpus/BZNSYP/wavs/000001.wav",
                             "/home/zhangwenbo5/lihongfeng/corpus/BZNSYP/wavs/000002.wav",
                             "/home/zhangwenbo5/lihongfeng/corpus/BZNSYP/wavs/000003.wav",
-                            "/home/zhangwenbo5/lihongfeng/corpus/BZNSYP/wavs/000004.wav"],
+                            # "/home/zhangwenbo5/lihongfeng/corpus/BZNSYP/wavs/000004.wav",
+                            # "/home/zhangwenbo5/lihongfeng/corpus/BZNSYP/wavs/000005.wav",
+                            # "/home/zhangwenbo5/lihongfeng/corpus/BZNSYP/wavs/000006.wav",
+                            # "/home/zhangwenbo5/lihongfeng/corpus/BZNSYP/wavs/000007.wav",
+                            ],
         "SLR68_DEV_3756_22": ["/home/zhangwenbo5/lihongfeng/corpus/SLR68/dev/37_5622/37_5622_20170913203118.wav",
                               "/home/zhangwenbo5/lihongfeng/corpus/SLR68/dev/37_5622/37_5622_20170913203322.wav",
-                              "/home/zhangwenbo5/lihongfeng/corpus/SLR68/dev/37_5622/37_5622_20170913203824.wav"]
+                              "/home/zhangwenbo5/lihongfeng/corpus/SLR68/dev/37_5622/37_5622_20170913203824.wav"],
+        "SLR38_P00001A": ["/home/zhangwenbo5/lihongfeng/corpus/SLR38/ST-CMDS-20170001_1-OS/20170001P00001A0001.wav",],
     }[speaker_name]
     sentences = [
         # '美国主持人听到“中国”就插话',
@@ -57,9 +62,10 @@ def run_eval_part1(args):
         '请帮我显示中央一套', # aishell IC0896W0001.wav
         '确定下载三帝狂野飙车', # aishell IC0896W0002.wav
         '请帮我开启深圳卫视国际频道', # aishell IC0896W0003.wav
-        '您吃饭了吗',
+        '您吃饭了吗,我今天吃的太撑了',
         '您吃饭了吗？',
-        '你多大了',
+        '你多大了，你到底多大了，我猜你三十了，他多大了，他到底多大了，他猜你三十了',
+        '二毛你今天沒课嘛还和李霞聊天',
     ]
 
     text2pinyin = partial(get_pinyin, std=True, pb=True)
@@ -83,6 +89,7 @@ def run_eval_part1(args):
                             "%s-eval-%03d.wav" % (ckpt_step, i))
         print('[{:<10}]: {}'.format('processing', path))
         mel_spec = syner.synthesize_spectrograms([text], [speaker_embed])[0]
+        print('[{:<10}]:'.format('text:'), text)
         # print(np.shape(mel_spec))
         wav = syner.griffin_lim(mel_spec)
         audio.save_wav(wav, path, hparams.sample_rate)
