@@ -17,18 +17,21 @@ if __name__ == "__main__":
     parser.add_argument("dataset", type=str,
                         help="Comma-separated list of the name of the dataset you want to preprocess. "
                         "Possible names: LibriSpeech, SLR68, SLR38.")
-    parser.add_argument("-o", "--out_dir", type=Path, default=argparse.SUPPRESS, 
+    parser.add_argument("-o", "--out_dir", type=Path, default=argparse.SUPPRESS,
                         help="Path to the output directory that will contain the mel spectrograms,"
                         " the audios and the embeds. Defaults to <datasets_root>/SV2TTS/synthesizer/")
-    parser.add_argument("-n", "--n_processes", type=int, default=None, 
+    parser.add_argument("-n", "--n_processes", type=int, default=None,
                         help="Number of processes in parallel.")
-    parser.add_argument("-s", "--skip_existing", action="store_true", 
+    parser.add_argument("-s", "--skip_existing", action="store_true",
                         help="Whether to overwrite existing files with the same name. Useful if the "
                         "preprocessing was interrupted.")
-    parser.add_argument("--hparams", type=str, default="", 
+    parser.add_argument("--hparams", type=str, default="",
                         help="Hyperparameter overrides as a comma-separated list of name-value pairs")
+    parser.add_argument("--detach_label_and_embed_utt", type=bool, default=True,
+                        help="if True, use random utterance of the speaker to generate speaker embedding in synthesizer training.")
+    random_spkUtt_forSynthesizerTraining=True,
     args = parser.parse_args()
-    
+
     # Process the arguments
     if not hasattr(args, "out_dir"):
         args.out_dir = args.datasets_root.joinpath("SV2TTS", "synthesizer")
@@ -39,8 +42,8 @@ if __name__ == "__main__":
 
     # Preprocess the dataset
     print_args(args, parser)
-    args.hparams = hparams.parse(args.hparams) 
-    
+    args.hparams = hparams.parse(args.hparams)
+
     preprocess_func = {
         "LibriSpeech": preprocess_librispeech,
         "SLR68": preprocess_SLR68,
@@ -48,4 +51,4 @@ if __name__ == "__main__":
     }
     print("Preprocessing %s" % args.dataset)
     assert args.dataset in preprocess_func, 'not surpport such dataset'
-    preprocess_func[args.dataset](**vars(args)) 
+    preprocess_func[args.dataset](**vars(args))

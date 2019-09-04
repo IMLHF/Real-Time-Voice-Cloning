@@ -9,10 +9,11 @@ from tqdm import tqdm
 import numpy as np
 import librosa
 from synthesizer.textnorm import get_pinyin
+import os
 
 # region SLR38
 def preprocess_SLR38(datasets_root: Path, dataset: str, out_dir: Path, n_processes: int,
-                     skip_existing: bool, hparams):
+                     skip_existing: bool, hparams, detach_label_and_embed_utt):
     dataset_root = datasets_root.joinpath("SLR38")
     input_dir = dataset_root.joinpath("ST-CMDS-speaker-separated")
     print("\n    Using data form:" + str(input_dir))
@@ -23,21 +24,25 @@ def preprocess_SLR38(datasets_root: Path, dataset: str, out_dir: Path, n_process
         if _dir.is_file(): continue
         speaker_dirs.append(_dir)
 
-    _preprocess_speakers(speaker_dirs, dataset, "wav", _preprocess_speaker_SLR38, None,
+    others_params = {"detach_label_and_embed_utt": detach_label_and_embed_utt}
+    _preprocess_speakers(speaker_dirs, dataset, "wav", _preprocess_speaker_SLR38, others_params,
                          out_dir, n_processes, skip_existing, hparams)
 
 def _preprocess_speaker_SLR38(speaker_dir, suffix, out_dir: Path, skip_existing: bool, hparams, others_params):
+    detach_label_and_embed_utt = others_params["detach_label_and_embed_utt"]
     wav_fpath_list = speaker_dir.glob("*."+suffix)
     text_fpath_list = speaker_dir.glob("*.txt")
     metadata = []
     # Iterate over each wav
+    utt_fpath_list = list(speaker_dir.glob("*."+suffix))
+    utt_num = len(utt_fpath_list)
     for wav_fpath, txt_fpath in zip(wav_fpath_list, text_fpath_list):
         assert wav_fpath.exists(), str(wav_fpath)+" not exist."
         assert txt_fpath.exists(), str(wav_fpath)+" not exist."
 
         # Process each utt
         wav, _ = librosa.load(str(wav_fpath), hparams.sample_rate)
-        wav = wav / np.max(np.abs(wav)) * hparams.rescaling_max 
+        wav = wav / np.max(np.abs(wav)) * hparams.rescaling_max
         # wav_bak = wav
 
         # denoise
@@ -50,7 +55,7 @@ def _preprocess_speaker_SLR38(speaker_dir, suffix, out_dir: Path, skip_existing:
         # trim silence
         wav = audio.trim_silence(wav, 30)
         # audio.save_wav(wav_bak, str(wav_fpath.name), hparams.sample_rate)
-        # audio.save_wav(wav, str(wav_fpath.name).replace('.wav','_trimed.wav'), 
+        # audio.save_wav(wav, str(wav_fpath.name).replace('.wav','_trimed.wav'),
         #                hparams.sample_rate)
 
         # get text
@@ -60,15 +65,18 @@ def _preprocess_speaker_SLR38(speaker_dir, suffix, out_dir: Path, skip_existing:
         pinyin = " ".join(get_pinyin(text, std=True, pb=True))
 
         # print(wav_fpath.name, wav_fpath.stem)
+        random_uttBasename_forSpkEmbedding=None
+        if detach_label_and_embed_utt:
+            random_uttBasename_forSpkEmbedding=utt_fpath_list[np.random.randint(utt_num)].stem
         metadata.append(process_utterance(wav, pinyin, out_dir, wav_fpath.stem,
-                                          skip_existing, hparams))
+                                          skip_existing, hparams, random_uttBasename_forSpkEmbedding))
     return [m for m in metadata if m is not None]
 
 # endregion SLR38
 
 # region XX SLR68
 def preprocess_SLR68(datasets_root: Path, dataset: str, out_dir: Path, n_processes: int,
-                     skip_existing: bool, hparams):
+                     skip_existing: bool, hparams, detach_label_and_embed_utt):
     dataset_root = datasets_root.joinpath("SLR68")
     input_dir = dataset_root.joinpath("train")
     print("\n    Using data from:" + str(input_dir))
@@ -88,15 +96,21 @@ def preprocess_SLR68(datasets_root: Path, dataset: str, out_dir: Path, n_process
     for _line in lines:
         trans_dict[_line[0]]={"speaker_id": _line[1], "text": _line[2]}
 
-    process_speaker_fn_params = {"trans_dict": trans_dict}
+    # process_speaker_fn_params: params for _preprocess_speaker_SLR68
+    process_speaker_fn_params = {"trans_dict": trans_dict,
+                                 "detach_label_and_embed_utt": detach_label_and_embed_utt}
     _preprocess_speakers(speaker_dirs, dataset, "wav", _preprocess_speaker_SLR68, process_speaker_fn_params,
                          out_dir, n_processes, skip_existing, hparams)
 
 
 def _preprocess_speaker_SLR68(speaker_dir, suffix, out_dir: Path, skip_existing: bool, hparams, others_params):
     trans_dict = others_params["trans_dict"]
+    detach_label_and_embed_utt = others_params["detach_label_and_embed_utt"]
     metadata = []
     wav_fpath_list = speaker_dir.glob("*."+suffix)
+
+    utt_fpath_list = list(speaker_dir.glob("*."+suffix))
+    utt_num = len(utt_fpath_list)
     # Iterate over each wav
     for wav_fpath in wav_fpath_list:
         assert wav_fpath.exists(), str(wav_fpath)+" not exist."
@@ -116,7 +130,7 @@ def _preprocess_speaker_SLR68(speaker_dir, suffix, out_dir: Path, skip_existing:
         # trim silence
         wav = audio.trim_silence(wav, 20) # top_db: smaller for noisy
         # audio.save_wav(wav_bak, str(wav_fpath.name), hparams.sample_rate)
-        # audio.save_wav(wav, str(wav_fpath.name).replace('.wav','_trimed.wav'), 
+        # audio.save_wav(wav, str(wav_fpath.name).replace('.wav','_trimed.wav'),
         #                hparams.sample_rate)
 
         text = trans_dict[wav_fpath.name]["text"]
@@ -125,14 +139,18 @@ def _preprocess_speaker_SLR68(speaker_dir, suffix, out_dir: Path, skip_existing:
         pinyin = " ".join(get_pinyin(text, std=True, pb=True))
 
         # print(wav_fpath.name, wav_fpath.stem)
+        random_uttBasename_forSpkEmbedding=None
+        if detach_label_and_embed_utt:
+            random_uttBasename_forSpkEmbedding=utt_fpath_list[np.random.randint(utt_num)].stem
         metadata.append(process_utterance(wav, pinyin, out_dir, wav_fpath.stem,
-                                          skip_existing, hparams))
+                                          skip_existing, hparams, random_uttBasename_forSpkEmbedding))
     return [m for m in metadata if m is not None]
 # endregion SLR68
 
 # region librispeech
 def preprocess_librispeech(datasets_root: Path, dataset: str, out_dir: Path, n_processes: int,
-                           skip_existing: bool, hparams):
+                           skip_existing: bool, hparams, detach_label_and_embed_utt):
+    del detach_label_and_embed_utt
     # Gather the input directories
     dataset_root = datasets_root.joinpath("LibriSpeech")
     input_dirs = [
@@ -203,6 +221,13 @@ def _preprocess_speakers(speaker_dirs: list, dataset: str, wav_suffix: str, prep
     job = Pool(n_processes).imap(func, speaker_dirs)
     for speaker_metadata in tqdm(job, dataset, len(speaker_dirs), unit="speakers"):
         for metadatum in speaker_metadata:
+            metadatum = list(metadatum)
+            embed_dir = metadatum[2]
+            audio_get_embed = str(out_dir.joinpath("audio", embed_dir.replace('embed-', 'audio-')))
+            # audio may not exist (filted by "skip utterances that are too short" in process_utterance).
+            if not (os.path.exists(audio_get_embed) and os.path.isfile(audio_get_embed)):
+                metadatum[2] = metadatum[0].replace('audio-', 'embed-')
+            # print(metadatum[:3], flush=True)
             metadata_file.write("|".join(str(x) for x in metadatum) + "\n")
     metadata_file.close()
 
@@ -292,7 +317,10 @@ def split_on_silences(wav_fpath, words, end_times, hparams):
 
 
 def process_utterance(wav: np.ndarray, text: str, out_dir: Path, basename: str,
-                      skip_existing: bool, hparams):
+                      skip_existing: bool, hparams, random_uttBasename_forSpkEmbedding=None):
+    '''
+    random_uttBasename_forSpkEmbedding: if not None, use the utterance to generate speaker embedding in synthesizer training.
+    '''
     ## FOR REFERENCE:
     # For you not to lose your head if you ever wish to change things here or implement your own
     # synthesizer.
@@ -329,7 +357,10 @@ def process_utterance(wav: np.ndarray, text: str, out_dir: Path, basename: str,
     np.save(wav_fpath, wav, allow_pickle=False)
 
     # Return a tuple describing this training example
-    return wav_fpath.name, mel_fpath.name, "embed-%s.npy" % basename, len(wav), mel_frames, text
+    embed_basename = basename
+    if random_uttBasename_forSpkEmbedding is not None:
+        embed_basename = random_uttBasename_forSpkEmbedding
+    return wav_fpath.name, mel_fpath.name, "embed-%s.npy" % embed_basename, len(wav), mel_frames, text
 
 
 def embed_utterance(fpaths, encoder_model_fpath):
@@ -355,7 +386,8 @@ def create_embeddings(synthesizer_root: Path, encoder_model_fpath: Path, n_proce
     # Gather the input wave filepath and the target output embed filepath
     with metadata_fpath.open("r") as metadata_file:
         metadata = [line.split("|") for line in metadata_file]
-        fpaths = [(wav_dir.joinpath(m[0]), embed_dir.joinpath(m[2])) for m in metadata]
+        fpaths = [(wav_dir.joinpath(m[2].replace('embed-', 'audio-')),
+                   embed_dir.joinpath(m[2])) for m in metadata]
 
     # TODO: improve on the multiprocessing, it's terrible. Disk I/O is the bottleneck here.
     # Embed the utterances in separate threads
