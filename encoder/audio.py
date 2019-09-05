@@ -49,7 +49,7 @@ def preprocess_wav(fpath_or_wav: Union[str, Path, np.ndarray],
     # # Apply the preprocessing: normalize volume and shorten long silences 
     # wav = normalize_volume(wav, audio_norm_target_dBFS, increase_only=True)
     # wav = trim_long_silences(wav)
-    save_wav(wav, fpath_or_wav.name, sampling_rate) # TODO: rm DEBUG
+    # save_wav(wav, fpath_or_wav.name, sampling_rate) # TODO: rm DEBUG
 
     # denoise
     if len(wav) > sampling_rate*(0.3+0.1):
@@ -60,7 +60,7 @@ def preprocess_wav(fpath_or_wav: Union[str, Path, np.ndarray],
 
     # trim silence
     wav = trim_silence(wav, 20) # top_db: smaller for noisy
-    save_wav(wav, fpath_or_wav.name.replace(".wav","_trimed.wav"), sampling_rate) # TODO: rm DEBUG
+    # save_wav(wav, fpath_or_wav.name.replace(".wav","_trimed.wav"), sampling_rate) # TODO: rm DEBUG
     return wav
 
 
