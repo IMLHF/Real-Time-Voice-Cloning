@@ -5,12 +5,22 @@ from encoder.params_data import vad_window_length, vad_max_silence_length, vad_m
 from pathlib import Path
 from typing import Optional, Union
 import numpy as np
+from utils import logmmse
 import webrtcvad
 import librosa
 import struct
+from scipy.io import wavfile
 
 int16_max = (2 ** 15) - 1
 
+def save_wav(wav, path, sr):
+    wav *= 32767 / max(0.01, np.max(np.abs(wav)))
+    #proposed by @dsmiller
+    wavfile.write(path, sr, wav.astype(np.int16))
+
+def trim_silence(wav, top_db=60):
+    # top_db : set larger for clear speech, set small for noisy speech
+    return librosa.effects.trim(wav, top_db=top_db, frame_length=512, hop_length=128)[0]
 
 def preprocess_wav(fpath_or_wav: Union[str, Path, np.ndarray],
                    source_sr: Optional[int] = None):
@@ -27,18 +37,30 @@ def preprocess_wav(fpath_or_wav: Union[str, Path, np.ndarray],
     """
     # Load the wav from disk if needed
     if isinstance(fpath_or_wav, str) or isinstance(fpath_or_wav, Path):
-        wav, source_sr = librosa.load(str(fpath_or_wav), sr=None)
+        wav, source_sr = librosa.load(str(fpath_or_wav), sr=sampling_rate)
     else:
         wav = fpath_or_wav
     
     # Resample the wav if needed
-    if source_sr is not None and source_sr != sampling_rate:
-        wav = librosa.resample(wav, source_sr, sampling_rate)
+    # if source_sr is not None and source_sr != sampling_rate:
+    #     wav = librosa.resample(wav, source_sr, sampling_rate)
         
-    # Apply the preprocessing: normalize volume and shorten long silences 
-    wav = normalize_volume(wav, audio_norm_target_dBFS, increase_only=True)
-    wav = trim_long_silences(wav)
-    
+    wav = wav / np.abs(wav).max() * 0.9
+    # # Apply the preprocessing: normalize volume and shorten long silences 
+    # wav = normalize_volume(wav, audio_norm_target_dBFS, increase_only=True)
+    # wav = trim_long_silences(wav)
+    save_wav(wav, fpath_or_wav.name, sampling_rate) # TODO: rm DEBUG
+
+    # denoise
+    if len(wav) > sampling_rate*(0.3+0.1):
+        noise_wav = np.concatenate([wav[:int(sampling_rate*0.15)],
+                                    wav[-int(sampling_rate*0.15):]])
+        profile = logmmse.profile_noise(noise_wav, sampling_rate)
+        wav = logmmse.denoise(wav, profile, eta=0)
+
+    # trim silence
+    wav = trim_silence(wav, 20) # top_db: smaller for noisy
+    save_wav(wav, fpath_or_wav.name.replace(".wav","_trimed.wav"), sampling_rate) # TODO: rm DEBUG
     return wav
 
 
