@@ -1,4 +1,4 @@
-from multiprocess.pool import ThreadPool
+from multiprocess.pool import Pool
 from encoder.params_data import partials_n_frames, sampling_rate
 from encoder.config import librispeech_datasets, anglophone_nationalites
 from datetime import datetime
@@ -115,7 +115,7 @@ def _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir,
     # Process the utterances for each speaker
     # for speaker_dir in speaker_dirs: # DEBUG
     #     preprocess_speaker(speaker_dir)
-    with ThreadPool(56) as pool:
+    with Pool(56) as pool:
         list(tqdm(pool.imap(preprocess_speaker, speaker_dirs), dataset_name, len(speaker_dirs),
                   unit="speakers"))
     logger.finalize()
