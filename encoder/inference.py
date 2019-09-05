@@ -28,7 +28,7 @@ def load_model(weights_fpath: Path, device=None):
     if device is None:
         _device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     elif isinstance(device, str):
-        _device = torch.device(device)
+        _device = torch.device(device)233
     _model = SpeakerEncoder(_device) # loss must be in "CPU"
     checkpoint = torch.load(str(weights_fpath), map_location=_device)
     _model.load_state_dict(checkpoint["model_state"])
