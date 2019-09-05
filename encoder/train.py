@@ -9,7 +9,7 @@ import time
 
 def sync(device: torch.device):
     # FIXME
-    return 
+    # return 
     # For correct profiling (cuda operations are async)
     if device.type == "cuda":
        torch.cuda.synchronize(device)
@@ -24,17 +24,16 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         speakers_per_batch,
         utterances_per_speaker,
         num_workers=dataloader_workers,
+        pin_memory=True,
     )
     
     # Setup the device on which to run the forward pass and the loss. These can be different, 
     # because the forward pass is faster on the GPU whereas the loss is often (depending on your
     # hyperparameters) faster on the CPU.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # FIXME: currently, the gradient is None if loss_device is cuda
-    loss_device = torch.device("cpu")
     
     # Create the model and the optimizer
-    model = SpeakerEncoder(device, loss_device)
+    model = SpeakerEncoder(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate_init)
     init_step = 1
     
@@ -71,7 +70,7 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
     profiler = Profiler(summarize_every=1, disabled=True)
     for step, speaker_batch in enumerate(loader, init_step):
         # step_s_time = time.time()
-
+        sync(device)
         profiler.tick("Blocking, waiting for batch (threaded)")
         
         # Forward pass
@@ -81,12 +80,12 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         embeds = model(inputs)
         sync(device)
         profiler.tick("Forward pass")
-        embeds_loss = embeds.view((speakers_per_batch, utterances_per_speaker, -1)).to(loss_device)
+        embeds_loss = embeds.view((speakers_per_batch, utterances_per_speaker, -1))
         loss, eer = model.loss(embeds_loss)
         # print(loss.item(), flush=True)
-        total_loss += loss.detach().numpy()
+        total_loss += loss.item()
         total_eer += eer
-        sync(loss_device)
+        sync(device)
         profiler.tick("Loss")
 
         # Backward pass
@@ -95,6 +94,7 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         profiler.tick("Backward pass")
         model.do_gradient_ops()
         optimizer.step()
+        sync(device)
         profiler.tick("Parameter update")
         
         # Update visualizations
@@ -146,7 +146,7 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
                 "model_state": model.state_dict(),
                 "optimizer_state": optimizer.state_dict(),
             }, backup_fpath)
-            
+        sync(device)
         profiler.tick("Extras (visualizations, saving)")
         # step_e_time = time.time()
         # print("step loss:", loss.detach().numpy(), "step eer:", eer, flush=True)
