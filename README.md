@@ -1,3 +1,9 @@
+## Compared to [CorentinJ/Real-Time-Voice-Cloning](https://github.com/CorentinJ/Real-Time-Voice-Cloning)
+
+- 1. Add Chinese datasets for speaker_encoder ans synthesizer training ([SLR38](http://www.openslr.org/38/), [SLR68](http://www.openslr.org/68/) etc.)
+- 2. Fix bugs, speed up speaker encoder training (place loss on gpu).
+
+
 # Real-Time Voice Cloning
 This repository is an implementation of [Transfer Learning from Speaker Verification to
 Multispeaker Text-To-Speech Synthesis](https://arxiv.org/pdf/1806.04558.pdf) (SV2TTS) with a vocoder that works in real-time. Feel free to check [my thesis](https://matheo.uliege.be/handle/2268.2/6801) if you're curious or if you're looking for info I haven't documented yet (don't hesitate to make an issue for that too). Mostly I would recommend giving a quick look to the figures beyond the introduction.
@@ -10,7 +16,7 @@ SV2TTS is a three-stage deep learning framework that allows to create a numerica
 
 
 
-### Papers implemented  
+### Papers implemented
 | URL | Designation | Title | Implementation source |
 | --- | ----------- | ----- | --------------------- |
 |[**1806.04558**](https://arxiv.org/pdf/1806.04558.pdf) | **SV2TTS** | **Transfer Learning from Speaker Verification to Multispeaker Text-To-Speech Synthesis** | This repo |
@@ -50,9 +56,9 @@ For playing with the toolbox alone, I only recommend downloading [`LibriSpeech/t
 ### Toolbox
 You can then try the toolbox:
 
-`python demo_toolbox.py -d <datasets_root>`  
-or  
-`python demo_toolbox.py`  
+`python demo_toolbox.py -d <datasets_root>`
+or
+`python demo_toolbox.py`
 
 depending on whether you downloaded any datasets. If you are running an X-server or if you have the error `Aborted (core dumped)`, see [this issue](https://github.com/CorentinJ/Real-Time-Voice-Cloning/issues/11#issuecomment-504733590).
 
@@ -60,7 +66,7 @@ depending on whether you downloaded any datasets. If you are running an X-server
 - **How it all works** (coming soon!)
 - [**Training models yourself**](https://github.com/CorentinJ/Real-Time-Voice-Cloning/wiki/Training)
 - **Training with other data/languages** (coming soon! - see [here](https://github.com/CorentinJ/Real-Time-Voice-Cloning/issues/30#issuecomment-507864097) for now)
-- [**TODO and planned features**](https://github.com/CorentinJ/Real-Time-Voice-Cloning/wiki/TODO-&-planned-features) 
+- [**TODO and planned features**](https://github.com/CorentinJ/Real-Time-Voice-Cloning/wiki/TODO-&-planned-features)
 
 ## Contribution
 Feel free to open issues or PRs for any problem you may encounter, typos that you see or aspects that are confusing. Contributions are welcome, open an issue or email me if you have something you want to work on.
