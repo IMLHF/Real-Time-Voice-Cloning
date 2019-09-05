@@ -14,7 +14,7 @@ class DatasetLog:
     """
 
     def __init__(self, root, name):
-        self.text_file = open(Path(root, "Log_%s.txt" % name.replace("/", "_")), "w")
+        self.text_file = open(str(Path(root, "Log_%s.txt" % name.replace("/", "_"))), "w")
         # print(self.text_file, "___________________", flush=True) # DEBUG
         self.sample_data = dict()
 
@@ -115,29 +115,25 @@ def _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir,
     # Process the utterances for each speaker
     # for speaker_dir in speaker_dirs: # DEBUG
     #     preprocess_speaker(speaker_dir)
-    with ThreadPool(16) as pool:
+    with ThreadPool(32) as pool:
         list(tqdm(pool.imap(preprocess_speaker, speaker_dirs), dataset_name, len(speaker_dirs),
                   unit="speakers"))
     logger.finalize()
     print("Done preprocessing %s.\n" % dataset_name)
 
-# #preprocess all the data of SLR38
-# def preprocess_ST(datasets_root: Path, out_dir: Path, skip_existing=False):
-#     dataset_name = 'new_ST_dataset'
-#     dataset_root, logger = _init_preprocess_dataset(dataset_name, datasets_root, out_dir)
-#     if not dataset_root:
-#         return
-#     speaker_dirs = list(dataset_root.glob('*'))
-#     _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, 'wav', skip_existing, logger)
+# preprocess SLR38 url: http://www.openslr.org/38/
+def preprocess_SLR38(datasets_root: Path, out_dir: Path, skip_existing=False):
+    dataset_name = "SLR38/ST-CMDS-speaker-separated"
+    dataset_root, logger = _init_preprocess_dataset(dataset_name, datasets_root, out_dir) # data_dir/SLR38/ST-CMDS-speaker-separated
+    if not dataset_root:
+        return
+    all_sub_dirs = list(dataset_root.glob('*'))
+    speaker_dirs = []
+    for _dir in all_sub_dirs:
+        if _dir.is_file(): continue
+        speaker_dirs.append(_dir)
+    _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, 'wav', skip_existing, logger)
 
-# # preprocess the dev data of SLR68
-# def preprocess_SLR68(datasets_root: Path, out_dir: Path, skip_existing=False):
-#     dataset_name = 'dev'
-#     dataset_root, logger = _init_preprocess_dataset(dataset_name, datasets_root, out_dir)
-#     if not dataset_root:
-#         return
-#     speaker_dirs = list(dataset_root.glob('*'))
-#     _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, 'wav', skip_existing, logger)
 
 # preprocess the training data of MAGICDATA/train (SLR68), dataset url: http://www.openslr.org/68/
 def preprocess_SLR68(datasets_root: Path, out_dir: Path, skip_existing=False):

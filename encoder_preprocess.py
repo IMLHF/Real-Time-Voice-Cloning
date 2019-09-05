@@ -1,4 +1,4 @@
-from encoder.preprocess import preprocess_librispeech, preprocess_voxceleb1, preprocess_voxceleb2, preprocess_SLR68
+from encoder.preprocess import preprocess_librispeech, preprocess_voxceleb1, preprocess_voxceleb2, preprocess_SLR68, preprocess_SLR38
 from utils.argutils import print_args
 from pathlib import Path
 import argparse
@@ -28,10 +28,10 @@ if __name__ == "__main__":
                         help="Path to the directory containing your LibriSpeech/TTS, VoxCeleb datasets and SLR68.")
     parser.add_argument("-d", "--datasets", type=str,
                         required=True,
-                        # default="librispeech_other,voxceleb1,voxceleb2,SLR68_train", 
+                        # default="librispeech_other,voxceleb1,voxceleb2,SLR68,SLR38", 
                         help="Comma-separated list of the name of the datasets you want to preprocess. Only the train "
                         "set of these datasets will be used. Possible names: librispeech_other, voxceleb1, "
-                        "voxceleb2, SLR68.")
+                        "voxceleb2, SLR68, SLR38.")
     parser.add_argument("-o", "--out_dir", type=Path, default=argparse.SUPPRESS,
                         help="Path to the output directory that will contain the mel spectrograms. If left out, "
                         "defaults to <datasets_root>/SV2TTS/encoder/")
@@ -53,7 +53,8 @@ if __name__ == "__main__":
         "librispeech_other": preprocess_librispeech,
         "voxceleb1": preprocess_voxceleb1,
         "voxceleb2": preprocess_voxceleb2,
-        "SLR68": preprocess_SLR68
+        "SLR68": preprocess_SLR68,
+        "SLR38": preprocess_SLR38,
     }
     args = vars(args)
     for dataset in args.pop("datasets"):
