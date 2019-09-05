@@ -10,7 +10,7 @@ step=$1
 
 if [ "$step" = "encoder_preprocess" ]; then
     python3.5 encoder_preprocess.py --datasets_root=/home/zhangwenbo5/corpus \
-                                    --datasets=SLR68 \
+                                    --datasets=SLR68,SLR38 \
                                     2>&1 | tee -a log_lhf/encoder_preprocess.log
 elif [ "$step" = "encoder_train" ]; then # pytorch
     CUDA_VISIBLE_DEVICES=$GPU_DEVICES python3.5 encoder_train.py --clean_data_root=/home/zhangwenbo5/corpus/SV2TTS/encoder \
