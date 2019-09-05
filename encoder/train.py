@@ -65,9 +65,10 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
     #vis.log_implementation({"Device": device_name})
     
     save_interval_s_time = time.time()
+    prt_interval_s_time = time.time()
     total_loss, total_eer = 0, 0
     # Training loop
-    profiler = Profiler(summarize_every=10, disabled=True)
+    profiler = Profiler(summarize_every=1, disabled=True)
     for step, speaker_batch in enumerate(loader, init_step):
         # step_s_time = time.time()
 
@@ -109,21 +110,30 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
             #vis.draw_projections(embeds, utterances_per_speaker, step, projection_fpath)
             #vis.save()
 
+        step_prt = 10
+        if step % step_prt == 0:
+            prt_interval_e_time = time.time()
+            cost_time = prt_interval_e_time - prt_interval_s_time
+            prt_interval_s_time = prt_interval_e_time
+            print("    Step %06d> %d step cost %d seconds, Avg_loss:%.4f, Avg_eer:%.4f." % (
+                    #   step, save_every, cost_time, loss.detach().numpy(), eer), flush=True)
+                    step, step_prt, cost_time, total_loss/step_prt, total_eer/step_prt), flush=True)
+            total_loss, total_eer = 0, 0
+
+
         # Overwrite the latest version of the model
         if save_every != 0 and step % save_every == 0:
             save_interval_e_time = time.time()
             cost_time = save_interval_e_time - save_interval_s_time
             print("\n"
-                  "Step %06d>"
-                  "    Saving the model, %d step cost %d seconds"
-                  "    Avg_loss:%.4f, Avg_eer:%.4f." % (
+                  "++++Step %06d> Saving the model, %d step cost %d seconds." % (
                     #   step, save_every, cost_time, loss.detach().numpy(), eer), flush=True)
-                    step, save_every, cost_time, loss.item(), eer), flush=True)
+                    step, save_every, cost_time), flush=True)
             torch.save({
                 "step": step + 1,
                 "model_state": model.state_dict(),
                 "optimizer_state": optimizer.state_dict(),
-                }, state_fpath)
+                }, str(state_fpath))
             save_interval_s_time = save_interval_e_time
             
         # Make a backup
