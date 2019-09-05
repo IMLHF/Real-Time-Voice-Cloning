@@ -1,6 +1,6 @@
 ## Compared to [CorentinJ/Real-Time-Voice-Cloning](https://github.com/CorentinJ/Real-Time-Voice-Cloning)
 
-- 1. Add Chinese datasets for speaker_encoder ans synthesizer training ([SLR38](http://www.openslr.org/38/), [SLR68](http://www.openslr.org/68/) etc.)
+- 1. Add Chinese datasets for speaker-encoder and synthesizer training ([SLR38](http://www.openslr.org/38/), [SLR68](http://www.openslr.org/68/) etc.)
 - 2. Fix bugs, speed up speaker encoder training (place loss on gpu).
 
 
