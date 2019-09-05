@@ -103,7 +103,7 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         
         # Draw projections and save them to the backup folder
         if umap_every != 0 and step % umap_every == 0:
-            print("Drawing and saving projections (step %d)" % step)
+            # print("Drawing and saving projections (step %d)" % step)
             backup_dir.mkdir(exist_ok=True)
             # projection_fpath = backup_dir.joinpath("%s_umap_%06d.png" % (run_id, step))
             embeds = embeds.detach().cpu().numpy()
