@@ -9,7 +9,7 @@ import time
 
 def sync(device: torch.device):
     # FIXME
-    # return 
+    # return
     # For correct profiling (cuda operations are async)
     if device.type == "cuda":
        torch.cuda.synchronize(device)
@@ -26,17 +26,17 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         num_workers=dataloader_workers,
         pin_memory=True,
     )
-    
-    # Setup the device on which to run the forward pass and the loss. These can be different, 
+
+    # Setup the device on which to run the forward pass and the loss. These can be different,
     # because the forward pass is faster on the GPU whereas the loss is often (depending on your
     # hyperparameters) faster on the CPU.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
+
     # Create the model and the optimizer
     model = SpeakerEncoder(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate_init)
     init_step = 1
-    
+
     # Configure file path for the model
     state_fpath = models_dir.joinpath(run_id + ".pt")
     backup_dir = models_dir.joinpath(run_id + "_backups")
@@ -55,14 +55,14 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
     else:
         print("Starting the training from scratch.")
     model.train()
-    
+
     # Initialize the visualization environment
     #vis = Visualizations(run_id, vis_every, server=visdom_server, disabled=no_visdom)
     #vis.log_dataset(dataset)
     #vis.log_params()
     # device_name = str(torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU")
     #vis.log_implementation({"Device": device_name})
-    
+
     save_interval_s_time = time.time()
     prt_interval_s_time = time.time()
     total_loss, total_eer = 0, 0
@@ -72,7 +72,7 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         # step_s_time = time.time()
         sync(device)
         profiler.tick("Blocking, waiting for batch (threaded)")
-        
+
         # Forward pass
         inputs = torch.from_numpy(speaker_batch.data).to(device)
         sync(device)
@@ -96,11 +96,11 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         optimizer.step()
         sync(device)
         profiler.tick("Parameter update")
-        
+
         # Update visualizations
         # learning_rate = optimizer.param_groups[0]["lr"]
         #vis.update(loss.item(), eer, step)
-        
+
         # Draw projections and save them to the backup folder
         if umap_every != 0 and step % umap_every == 0:
             # print("Drawing and saving projections (step %d)" % step)
@@ -135,12 +135,12 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
                 "optimizer_state": optimizer.state_dict(),
                 }, str(state_fpath))
             save_interval_s_time = save_interval_e_time
-            
+
         # Make a backup
         if backup_every != 0 and step % backup_every == 0:
             print("Making a backup (step %d)" % step)
             backup_dir.mkdir(exist_ok=True)
-            backup_fpath = backup_dir.joinpath("%s_bak_%06d.pt" % (run_id, step))
+            backup_fpath = str(backup_dir.joinpath("%s_bak_%06d.pt" % (run_id, step)))
             torch.save({
                 "step": step + 1,
                 "model_state": model.state_dict(),
