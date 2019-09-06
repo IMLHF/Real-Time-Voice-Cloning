@@ -9,7 +9,7 @@ import time
 
 def sync(device: torch.device):
     # FIXME
-    # return
+    return
     # For correct profiling (cuda operations are async)
     if device.type == "cuda":
        torch.cuda.synchronize(device)
