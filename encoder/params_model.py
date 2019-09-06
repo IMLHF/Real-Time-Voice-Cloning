@@ -7,7 +7,7 @@ model_num_layers = 3
 
 ## Training parameters
 learning_rate_init = 1e-4
-speakers_per_batch = 64
+speakers_per_batch = 80
 utterances_per_speaker = 32
 
-dataloader_workers = 16
+dataloader_workers = 4
