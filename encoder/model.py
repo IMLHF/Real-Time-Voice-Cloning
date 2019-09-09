@@ -75,10 +75,10 @@ class SpeakerEncoder(nn.Module):
         speakers_per_batch, utterances_per_speaker = embeds.shape[:2]
 
         # Inclusive centroids (1 per speaker). Cloning is needed for reverse differentiation
-        centroids_incl = torch.mean(embeds, dim=1, keepdim=True)
+        centroids_incl = torch.mean(embeds, dim=1, keepdim=True) # [speaker, 1, dim]
         centroids_incl = centroids_incl.clone() / torch.norm(centroids_incl, dim=2, keepdim=True)
 
-        # Exclusive centroids (1 per utterance)
+        # Exclusive centroids (1 per utterance) [speaker, utt, dim]
         centroids_excl = (torch.sum(embeds, dim=1, keepdim=True) - embeds)
         centroids_excl /= (utterances_per_speaker - 1)
         centroids_excl = centroids_excl.clone() / torch.norm(centroids_excl, dim=2, keepdim=True)
@@ -89,10 +89,15 @@ class SpeakerEncoder(nn.Module):
         sim_matrix = torch.zeros(speakers_per_batch, utterances_per_speaker,
                                  speakers_per_batch).to(self.device)
         mask_matrix = 1 - torch.eye(speakers_per_batch, dtype=torch.int).to(self.device)
+        # print(mask_matrix)
         for j in range(speakers_per_batch):
             mask = torch.where(mask_matrix[j])[0]
-            sim_matrix[mask, :, j] = (embeds[mask] * centroids_incl[j]).sum(dim=2)
-            sim_matrix[j, :, j] = (embeds[j] * centroids_excl[j]).sum(dim=1)
+
+            # [speaker-1, n_utt, 512], [1, 512] -> [speaker-1, n_utt]
+            sim_matrix[mask, :, j] = (embeds[mask] * centroids_incl[j]).sum(dim=2) # negative sample
+
+            # [utt, 512], [utt, 512] -> [utt,]
+            sim_matrix[j, :, j] = (embeds[j] * centroids_excl[j]).sum(dim=1) # positive sample,
 
         ## Even more vectorized version (slower maybe because of transpose)
         # sim_matrix2 = torch.zeros(speakers_per_batch, speakers_per_batch, utterances_per_speaker
@@ -123,9 +128,8 @@ class SpeakerEncoder(nn.Module):
         sim_matrix = sim_matrix.reshape((speakers_per_batch * utterances_per_speaker,
                                          speakers_per_batch))
         target = torch.repeat_interleave(torch.arange(speakers_per_batch).to(self.device), utterances_per_speaker)
-        # print(sim_matrix.shape, target.shape, speakers_per_batch, flush=True)
+        # print(sim_matrix.shape, target.shape, speakers_per_batch, flush=True) #[spk*utt, spk], [spk*utt]
         loss = self.loss_fn(sim_matrix, target)
-
 
         # EER (not backpropagated)
         with torch.no_grad():
