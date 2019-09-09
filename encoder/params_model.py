@@ -10,4 +10,4 @@ learning_rate_init = 1e-4
 speakers_per_batch = 80
 utterances_per_speaker = 32
 
-dataloader_workers = 4
+dataloader_workers = 0
