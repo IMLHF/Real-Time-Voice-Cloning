@@ -7,7 +7,7 @@ import threading
 import time
 import os
 
-_batches_per_group = 64
+_batches_per_group = 16
 
 class Feeder:
     """
