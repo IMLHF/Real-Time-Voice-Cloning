@@ -11,6 +11,82 @@ import librosa
 from synthesizer.textnorm import get_pinyin
 import os
 
+# region aishell2
+def preprocess_aishell2(datasets_root: Path, dataset: str, out_dir: Path, n_processes: int,
+                        skip_existing: bool, hparams, detach_label_and_embed_utt):
+    dataset_root = datasets_root.joinpath("aishell2")
+    input_dir = dataset_root.joinpath("data/wav")
+    print("\n    Using data from:" + str(input_dir))
+    assert input_dir.exists(), str(input_dir)+" not exist."
+    all_sub_dirs=list(input_dir.glob("*"))
+    speaker_dirs=[]
+    for _dir in all_sub_dirs:
+        if _dir.is_file(): continue
+        speaker_dirs.append(_dir)
+    speaker_dirs.sort()
+    trans_fpath = dataset_root.joinpath('data', 'trans.txt')
+    assert trans_fpath.exists(), str(input_dir)+" not exist."
+    with trans_fpath.open("r") as trans_f:
+        lines = [_line.split() for _line in trans_f]
+    trans_dict = {}
+    for _line in lines:
+        trans_dict[_line[0]] = _line[1]
+
+    # process_speaker_fn_params: params for _preprocess_speaker_aishell2
+    process_speaker_fn_params = {"trans_dict": trans_dict,
+                                 "detach_label_and_embed_utt": detach_label_and_embed_utt}
+    _preprocess_speakers(speaker_dirs, dataset, "wav", _preprocess_speaker_aishell2, process_speaker_fn_params,
+                         out_dir, n_processes, skip_existing, hparams)
+
+
+def _preprocess_speaker_aishell2(speaker_dir, suffix, out_dir: Path, skip_existing: bool, hparams, others_params):
+    trans_dict = others_params["trans_dict"]
+    detach_label_and_embed_utt = others_params["detach_label_and_embed_utt"]
+    metadata = []
+    wav_fpath_list = speaker_dir.glob("*."+suffix)
+
+    utt_fpath_list = list(speaker_dir.glob("*."+suffix))
+    utt_num = len(utt_fpath_list)
+    # Iterate over each wav
+    for wav_fpath in wav_fpath_list:
+        assert wav_fpath.exists(), str(wav_fpath)+" not exist."
+
+        # Process each utterance
+        wav, _=librosa.load(str(wav_fpath), hparams.sample_rate)
+        wav_abs_max = np.max(np.abs(wav))
+        wav_abs_max = wav_abs_max if wav_abs_max > 0.0 else 1e-8
+        wav=wav / wav_abs_max * hparams.rescaling_max  # norm
+        # wav_bak = wav
+
+        # denoise
+        if len(wav) > hparams.sample_rate*(0.3+0.1):
+          noise_wav = np.concatenate([wav[:int(hparams.sample_rate*0.15)],
+                                      wav[-int(hparams.sample_rate*0.15):]])
+          profile = logmmse.profile_noise(noise_wav, hparams.sample_rate)
+          wav = logmmse.denoise(wav, profile, eta=0)
+
+        # trim silence
+        wav = audio.trim_silence(wav, 30)  # top_db: smaller for noisy
+        # audio.save_wav(wav_bak, str(wav_fpath.name), hparams.sample_rate)
+        # audio.save_wav(wav, str(wav_fpath.name).replace('.wav','_trimed.wav'),
+        #                hparams.sample_rate)
+
+        text = trans_dict[wav_fpath.stem]
+
+        # Chinese to Pinyin
+        pinyin = " ".join(get_pinyin(text, std=True, pb=True))
+
+        # print(wav_fpath.name, wav_fpath.stem)
+        random_uttBasename_forSpkEmbedding = None
+        if detach_label_and_embed_utt:
+            random_uttBasename_forSpkEmbedding = utt_fpath_list[np.random.randint(
+                utt_num)].stem
+        metadata.append(process_utterance(wav, pinyin, out_dir, wav_fpath.stem,
+                                          skip_existing, hparams, random_uttBasename_forSpkEmbedding))
+    return [m for m in metadata if m is not None]
+
+# endregion aishell2
+
 # region SLR38
 def preprocess_SLR38(datasets_root: Path, dataset: str, out_dir: Path, n_processes: int,
                      skip_existing: bool, hparams, detach_label_and_embed_utt):

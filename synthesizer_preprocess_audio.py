@@ -1,4 +1,4 @@
-from synthesizer.preprocess import preprocess_librispeech, preprocess_SLR68, preprocess_SLR38
+from synthesizer.preprocess import preprocess_librispeech, preprocess_SLR68, preprocess_SLR38, preprocess_aishell2
 from synthesizer.hparams import hparams
 from utils.argutils import print_args
 from pathlib import Path
@@ -16,7 +16,7 @@ if __name__ == "__main__":
                         help="Path to the directory containing your LibriSpeech/TTS datasets.")
     parser.add_argument("dataset", type=str,
                         help="Comma-separated list of the name of the dataset you want to preprocess. "
-                        "Possible names: LibriSpeech, SLR68, SLR38.")
+                        "Possible names: LibriSpeech, SLR68, SLR38, aishell2.")
     parser.add_argument("-o", "--out_dir", type=Path, default=argparse.SUPPRESS,
                         help="Path to the output directory that will contain the mel spectrograms,"
                         " the audios and the embeds. Defaults to <datasets_root>/SV2TTS/synthesizer/")
@@ -27,9 +27,8 @@ if __name__ == "__main__":
                         "preprocessing was interrupted.")
     parser.add_argument("--hparams", type=str, default="",
                         help="Hyperparameter overrides as a comma-separated list of name-value pairs")
-    parser.add_argument("--detach_label_and_embed_utt", type=bool, default=True,
+    parser.add_argument("--detach_label_and_embed_utt", type=bool, default=False,
                         help="if True, use random utterance of the speaker to generate speaker embedding in synthesizer training.")
-    random_spkUtt_forSynthesizerTraining=True,
     args = parser.parse_args()
 
     # Process the arguments
@@ -47,7 +46,8 @@ if __name__ == "__main__":
     preprocess_func = {
         "LibriSpeech": preprocess_librispeech,
         "SLR68": preprocess_SLR68,
-        "SLR38": preprocess_SLR38
+        "SLR38": preprocess_SLR38,
+        "aishell2": preprocess_aishell2,
     }
     print("Preprocessing %s" % args.dataset)
     assert args.dataset in preprocess_func, 'not surpport such dataset'
