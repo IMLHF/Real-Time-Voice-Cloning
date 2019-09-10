@@ -5,7 +5,7 @@ if [ -z "$1" ]; then
   exit -1
 fi
 
-GPU_DEVICES="1"
+GPU_DEVICES="3"
 step=$1
 
 if [ "$step" = "encoder_preprocess" ]; then
@@ -16,7 +16,7 @@ elif [ "$step" = "encoder_train" ]; then # pytorch
     CUDA_VISIBLE_DEVICES=$GPU_DEVICES python3.5 encoder_train.py --clean_data_root=/home/zhangwenbo5/corpus/SV2TTS/encoder \
                                                                  2>&1 | tee -a log_lhf/encoder_train.log
 elif [ "$step" = "synthesizer_preprocess_audio" ]; then
-    python3.5 synthesizer_preprocess_audio.py /home/zhangwenbo5/corpus SLR38 \
+    python3.5 synthesizer_preprocess_audio.py /home/zhangwenbo5/corpus aishell2 --n_processes=32 \
                                               2>&1 | tee -a log_lhf/synthesizer_preprocess_audio.log
 elif [ "$step" = "synthesizer_preprocess_embeds" ]; then
     CUDA_VISIBLE_DEVICES=$GPU_DEVICES python3.5 synthesizer_preprocess_embeds.py /home/zhangwenbo5/corpus \
