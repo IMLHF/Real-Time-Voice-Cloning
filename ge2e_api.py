@@ -57,8 +57,9 @@ if __name__ == "__main__":
         print("    sign in: 'python3.5 ge2e_api.py signin xxx.wav'")
         exit(-1)
     if sys.argv[1]=='signup':
+        assert len(sys.argv)==4, "sign up: 'python3.5 ge2e_api.py signup xxx.wav username'"
         wav_path = Path(sys.argv[2])
         signup(wav_path, str(sys.argv[3]), encoder_model_fpath)
     if sys.argv[1]=='signin':
-        wav_path = Path(sys.argv[2])
+        assert len(sys.argv)==3, "sign in: 'python3.5 ge2e_api.py signin xxx.wav'"
         signin(wav_path, encoder_model_fpath)
