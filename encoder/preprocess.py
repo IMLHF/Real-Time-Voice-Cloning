@@ -121,6 +121,18 @@ def _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir,
     logger.finalize()
     print("Done preprocessing %s.\n" % dataset_name)
 
+def preprocess_aishell2(datasets_root: Path, out_dir: Path, skip_existing=False):
+    dataset_name = "aishell2/data/wav"
+    dataset_root, logger = _init_preprocess_dataset(dataset_name, datasets_root, out_dir)
+    if not dataset_root:
+        return
+    all_sub_dirs = list(dataset_root.glob('*'))
+    speaker_dirs = []
+    for _dir in all_sub_dirs:
+        if _dir.is_file(): continue
+        speaker_dirs.append(_dir)
+    _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, 'wav', skip_existing, logger)
+
 # preprocess SLR38 url: http://www.openslr.org/38/
 def preprocess_SLR38(datasets_root: Path, out_dir: Path, skip_existing=False):
     dataset_name = "SLR38/ST-CMDS-speaker-separated"

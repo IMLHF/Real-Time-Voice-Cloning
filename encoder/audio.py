@@ -44,8 +44,10 @@ def preprocess_wav(fpath_or_wav: Union[str, Path, np.ndarray],
     # Resample the wav if needed
     # if source_sr is not None and source_sr != sampling_rate:
     #     wav = librosa.resample(wav, source_sr, sampling_rate)
-        
-    wav = wav / np.abs(wav).max() * 0.9
+    
+    wav_abs_max = np.max(np.abs(wav))
+    wav_abs_max = wav_abs_max if wav_abs_max > 0.0 else 1e-8
+    wav = wav / wav_abs_max * 0.9
     # # Apply the preprocessing: normalize volume and shorten long silences 
     # wav = normalize_volume(wav, audio_norm_target_dBFS, increase_only=True)
     # wav = trim_long_silences(wav)
@@ -59,7 +61,8 @@ def preprocess_wav(fpath_or_wav: Union[str, Path, np.ndarray],
         wav = logmmse.denoise(wav, profile, eta=0)
 
     # trim silence
-    wav = trim_silence(wav, 20) # top_db: smaller for noisy
+    wav = trim_silence(wav, 30) # top_db: smaller for noisy
+    wav = trim_long_silences(wav)
     # save_wav(wav, fpath_or_wav.name.replace(".wav","_trimed.wav"), sampling_rate) # TODO: rm DEBUG
     return wav
 

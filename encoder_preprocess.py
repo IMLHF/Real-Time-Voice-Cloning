@@ -1,4 +1,5 @@
-from encoder.preprocess import preprocess_librispeech, preprocess_voxceleb1, preprocess_voxceleb2, preprocess_SLR68, preprocess_SLR38
+from encoder.preprocess import preprocess_librispeech, preprocess_voxceleb1, preprocess_voxceleb2
+from encoder.preprocess import preprocess_SLR68, preprocess_SLR38, preprocess_aishell2
 from utils.argutils import print_args
 from pathlib import Path
 import argparse
@@ -55,6 +56,7 @@ if __name__ == "__main__":
         "voxceleb2": preprocess_voxceleb2,
         "SLR68": preprocess_SLR68,
         "SLR38": preprocess_SLR38,
+        "aishell2": preprocess_aishell2,
     }
     args = vars(args)
     for dataset in args.pop("datasets"):
