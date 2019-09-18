@@ -34,6 +34,11 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
 
     # Create the model and the optimizer
     model = SpeakerEncoder(device)
+    raw_model = model
+    if torch.cuda.device_count() > 1:
+        print("Use", torch.cuda.device_count(), "GPUs.")
+        # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+        model = torch.nn.DataParallel(model)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate_init)
     init_step = 1
 
@@ -47,7 +52,7 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
             print("Found existing model \"%s\", loading it and resuming training." % run_id)
             checkpoint = torch.load(str(state_fpath))
             init_step = checkpoint["step"]
-            model.load_state_dict(checkpoint["model_state"])
+            raw_model.load_state_dict(checkpoint["model_state"])
             optimizer.load_state_dict(checkpoint["optimizer_state"])
             optimizer.param_groups[0]["lr"] = learning_rate_init
         else:
@@ -81,7 +86,7 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         sync(device)
         profiler.tick("Forward pass")
         embeds_loss = embeds.view((speakers_per_batch, utterances_per_speaker, -1))
-        loss, eer = model.loss(embeds_loss)
+        loss, eer = raw_model.loss(embeds_loss)
         # print(loss.item(), flush=True)
         total_loss += loss.item()
         total_eer += eer
@@ -92,7 +97,7 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         model.zero_grad()
         loss.backward()
         profiler.tick("Backward pass")
-        model.do_gradient_ops()
+        raw_model.do_gradient_ops()
         optimizer.step()
         sync(device)
         profiler.tick("Parameter update")
