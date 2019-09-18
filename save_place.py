@@ -1,4 +1,5 @@
 import tensorflow as tf
+import time
 
 config = tf.ConfigProto()
 # config.allow_soft_placement = True
@@ -9,6 +10,7 @@ init = tf.global_variables_initializer()
 sess = tf.Session(config=config)
 sess.run(init)
 while True:
-    input()
+    time.sleep(1)
+    # input()
 # w = sess.run(w)
 # print(w)
