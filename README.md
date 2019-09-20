@@ -2,6 +2,7 @@
 
 - 1. Add Chinese datasets for speaker-encoder and synthesizer training ([SLR38](http://www.openslr.org/38/), [SLR68](http://www.openslr.org/68/) etc.)
 - 2. Fix bugs, speed up speaker encoder training (place loss on gpu).
+- 3. 欢迎使用中文提问
 
 
 # Real-Time Voice Cloning
