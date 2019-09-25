@@ -2,6 +2,9 @@ if [ -z "$1" ]; then
   echo "Need a step param:"
   echo "  encoder_preprocess"
   echo "  encoder_train"
+  echo "synthesizer_preprocess_audio"
+  echo "synthesizer_preprocess_embeds"
+  echo "synthesizer_train"
   exit -1
 fi
 
