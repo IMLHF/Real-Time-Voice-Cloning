@@ -1,5 +1,5 @@
-from encoder.preprocess import preprocess_librispeech, preprocess_voxceleb1, preprocess_voxceleb2
-from encoder.preprocess import preprocess_SLR68, preprocess_SLR38, preprocess_aishell2
+from encoder.preprocess import preprocess_librispeech_other, preprocess_voxceleb1, preprocess_voxceleb2
+from encoder.preprocess import preprocess_SLR68, preprocess_SLR38, preprocess_aishell2, preprocess_libri_test
 from utils.argutils import print_args
 from pathlib import Path
 import argparse
@@ -33,9 +33,9 @@ if __name__ == "__main__":
                         help="Comma-separated list of the name of the datasets you want to preprocess. Only the train "
                         "set of these datasets will be used. Possible names: librispeech_other, voxceleb1, "
                         "voxceleb2, SLR68, SLR38.")
-    parser.add_argument("-o", "--out_dir", type=Path, default=argparse.SUPPRESS,
-                        help="Path to the output directory that will contain the mel spectrograms. If left out, "
-                        "defaults to <datasets_root>/SV2TTS/encoder/")
+    parser.add_argument("-o", "--out_dir", type=Path, default="encoder_train",
+                        help="Path to the output directory that will contain the mel spectrograms."
+                        "Defaults to <datasets_root>/SV2TTS/encoder_train/")
     parser.add_argument("-s", "--skip_existing", action="store_true",
                         help="Whether to skip existing output files with the same name. Useful if this script was "
                         "interrupted.")
@@ -43,15 +43,15 @@ if __name__ == "__main__":
 
     # Process the arguments
     args.datasets = args.datasets.split(",")
-    if not hasattr(args, "out_dir"):
-        args.out_dir = args.datasets_root.joinpath("SV2TTS", "encoder")
+    args.out_dir = args.datasets_root.joinpath("SV2TTS", args.out_dir)
     assert args.datasets_root.exists()
     args.out_dir.mkdir(exist_ok=True, parents=True)
 
     # Preprocess the datasets
     print_args(args, parser)
     preprocess_func = {
-        "librispeech_other": preprocess_librispeech,
+        "librispeech_other": preprocess_librispeech_other,
+        "librispeech_test": preprocess_libri_test,
         "voxceleb1": preprocess_voxceleb1,
         "voxceleb2": preprocess_voxceleb2,
         "SLR68": preprocess_SLR68,

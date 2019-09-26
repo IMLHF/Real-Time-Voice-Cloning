@@ -162,8 +162,24 @@ def preprocess_SLR68(datasets_root: Path, out_dir: Path, skip_existing=False):
     _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, 'wav', skip_existing, logger)
 
 
-def preprocess_librispeech(datasets_root: Path, out_dir: Path, skip_existing=False):
+def preprocess_librispeech_other(datasets_root: Path, out_dir: Path, skip_existing=False):
     for dataset_name in librispeech_datasets["train"]["other"]:
+        # Initialize the preprocessing
+        dataset_root, logger = _init_preprocess_dataset(dataset_name, datasets_root, out_dir)
+        if not dataset_root:
+            return
+
+            # Preprocess all speakers
+        speaker_dirs = list(dataset_root.glob("*"))
+        _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, "flac",
+                                 skip_existing, logger)
+
+
+def preprocess_libri_test(datasets_root: Path, out_dir: Path, skip_existing=False):
+    datalist = []
+    datalist.extend(librispeech_datasets["test"]["clean"])
+    datalist.extend(librispeech_datasets["test"]["other"])
+    for dataset_name in datalist:
         # Initialize the preprocessing
         dataset_root, logger = _init_preprocess_dataset(dataset_name, datasets_root, out_dir)
         if not dataset_root:

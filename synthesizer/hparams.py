@@ -339,7 +339,7 @@ hparams = HParams(
     
     
     ### SV2TTS ###
-    speaker_embedding_size=512,
+    speaker_embedding_size=256,
     silence_min_duration_split=0.4, # Duration in seconds of a silence for an utterance to be split
     utterance_min_duration=1.6,     # Duration in seconds below which utterances are discarded
     

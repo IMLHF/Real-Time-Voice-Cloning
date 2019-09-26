@@ -14,13 +14,21 @@ def sync(device: torch.device):
     if device.type == "cuda":
        torch.cuda.synchronize(device)
 
-def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int, save_every: int,
+def train(run_id: str, train_data_root: Path, test_data_root: Path, models_dir: Path, save_every: int,
           backup_every: int, vis_every: int, force_restart: bool, visdom_server: str,
           no_visdom: bool):
     # Create a dataset and a dataloader
-    dataset = SpeakerVerificationDataset(clean_data_root)
+    dataset = SpeakerVerificationDataset(train_data_root)
     loader = SpeakerVerificationDataLoader(
         dataset,
+        speakers_per_batch,
+        utterances_per_speaker,
+        num_workers=dataloader_workers,
+        # pin_memory=True,
+    )
+    test_dataset = SpeakerVerificationDataset(test_data_root)
+    testdata_loader = SpeakerVerificationDataLoader(
+        test_dataset,
         speakers_per_batch,
         utterances_per_speaker,
         num_workers=dataloader_workers,
@@ -61,13 +69,6 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         print("Starting the training from scratch.")
     model.train()
 
-    # Initialize the visualization environment
-    #vis = Visualizations(run_id, vis_every, server=visdom_server, disabled=no_visdom)
-    #vis.log_dataset(dataset)
-    #vis.log_params()
-    # device_name = str(torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU")
-    #vis.log_implementation({"Device": device_name})
-
     save_interval_s_time = time.time()
     prt_interval_s_time = time.time()
     total_loss, total_eer = 0, 0
@@ -102,43 +103,52 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
         sync(device)
         profiler.tick("Parameter update")
 
-        # Update visualizations
-        # learning_rate = optimizer.param_groups[0]["lr"]
-        #vis.update(loss.item(), eer, step)
-
-        # Draw projections and save them to the backup folder
-        if umap_every != 0 and step % umap_every == 0:
-            # print("Drawing and saving projections (step %d)" % step)
-            backup_dir.mkdir(exist_ok=True)
-            # projection_fpath = backup_dir.joinpath("%s_umap_%06d.png" % (run_id, step))
-            embeds = embeds.detach().cpu().numpy()
-            #vis.draw_projections(embeds, utterances_per_speaker, step, projection_fpath)
-            #vis.save()
-
-        step_prt = 10
-        if step % step_prt == 0:
+        if step % vis_every == 0:
+            learning_rate = optimizer.param_groups[0]["lr"]
             prt_interval_e_time = time.time()
             cost_time = prt_interval_e_time - prt_interval_s_time
             prt_interval_s_time = prt_interval_e_time
-            print("    Step %06d> %d step cost %d seconds, Avg_loss:%.4f, Avg_eer:%.4f." % (
+            print("    Step %06d> %d step cost %d seconds, lr:%.4f, Avg_loss:%.4f, Avg_eer:%.4f." % (
                     #   step, save_every, cost_time, loss.detach().numpy(), eer), flush=True)
-                    step, step_prt, cost_time, total_loss/step_prt, total_eer/step_prt), flush=True)
+                    step, vis_every, cost_time, learning_rate, total_loss/vis_every, total_eer/vis_every), flush=True)
             total_loss, total_eer = 0, 0
 
 
-        # Overwrite the latest version of the model
+        # Overwrite the latest version of the model && test model
+        # save_every = 20
         if save_every != 0 and step % save_every == 0:
+            # save
+            torch.save({
+                "step": step + 1,
+                "model_state": model.state_dict(),
+                "optimizer_state": optimizer.state_dict(),
+                }, str(state_fpath))
+
+            # test
+            test_total_loss, test_total_eer = 0.0, 0.0
+            for test_step, test_batch in enumerate(testdata_loader, 1):
+                testinputs = torch.from_numpy(test_batch.data).to(device)
+                with torch.no_grad():
+                    test_embeds = model(testinputs)
+                    test_embeds_loss = test_embeds.view((speakers_per_batch, utterances_per_speaker, -1))
+                    test_loss, test_eer = raw_model.loss(test_embeds_loss)
+                # print(loss.item(), flush=True)
+                test_total_loss += test_loss.item()
+                test_total_eer += test_eer
+                test_prt_interval = 10
+                if test_step % test_prt_interval == 0:
+                    print("    |--Test Step %06d> Avg_loss:%.4f, Avg_eer:%.4f." % (
+                        test_step, test_total_loss/test_step, test_total_eer/test_step), flush=True)
+                if test_step == 50:
+                    break
+
+            # print log
             save_interval_e_time = time.time()
             cost_time = save_interval_e_time - save_interval_s_time
             print("\n"
                   "++++Step %06d> Saving the model, %d step cost %d seconds." % (
                     #   step, save_every, cost_time, loss.detach().numpy(), eer), flush=True)
                     step, save_every, cost_time), flush=True)
-            torch.save({
-                "step": step + 1,
-                "model_state": model.state_dict(),
-                "optimizer_state": optimizer.state_dict(),
-                }, str(state_fpath))
             save_interval_s_time = save_interval_e_time
 
         # Make a backup
