@@ -99,7 +99,7 @@ def run_eval_part1(args):
         path = os.path.join(eval_results_dir, 
                             "%s-eval-%03d.wav" % (ckpt_step, i))
         print('[{:<10}]: {}'.format('processing', path))
-        mel_spec = syner.synthesize_spectrograms([text], [speaker_embed])[0]
+        mel_spec = syner.synthesize_spectrograms([text], [speaker_embed])[0] # batch synthesize
         print('[{:<10}]:'.format('text:'), text)
         # print(np.shape(mel_spec))
         wav = syner.griffin_lim(mel_spec)
