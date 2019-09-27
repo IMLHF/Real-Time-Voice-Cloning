@@ -6,6 +6,7 @@ from utils.profiler import Profiler
 from pathlib import Path
 import torch
 import time
+import sys
 
 def sync(device: torch.device):
     # FIXME
@@ -68,6 +69,7 @@ def train(run_id: str, train_data_root: Path, test_data_root: Path, models_dir: 
     else:
         print("Starting the training from scratch.")
     model.train()
+    sys.stdout.flush()
 
     save_interval_s_time = time.time()
     prt_interval_s_time = time.time()
