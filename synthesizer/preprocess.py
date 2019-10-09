@@ -230,9 +230,9 @@ def preprocess_librispeech(datasets_root: Path, dataset: str, out_dir: Path, n_p
     # Gather the input directories
     dataset_root = datasets_root.joinpath("LibriSpeech")
     input_dirs = [
-        # dataset_root.joinpath("train-clean-100"),
-        # dataset_root.joinpath("train-clean-360"),
-        dataset_root.joinpath("train-other-500"),
+        dataset_root.joinpath("train-clean-100"),
+        dataset_root.joinpath("train-clean-360"),
+        # dataset_root.joinpath("train-other-500"),
     ]
     print("\n    ".join(map(str, ["Using data from:"] + input_dirs)))
     assert all(input_dir.exists() for input_dir in input_dirs)
@@ -260,7 +260,7 @@ def _preprocess_speaker_librispeech(speaker_dir, suffix, out_dir: Path, skip_exi
         # Iterate over each entry in the alignments file
         for wav_fname, words, end_times in alignments:
             wav_fpath = book_dir.joinpath(".".join([wav_fname, suffix]))
-            assert wav_fpath.exists()
+            assert wav_fpath.exists(), str(wav_fpath)
             words = words.replace("\"", "").split(",")
             end_times = list(map(float, end_times.replace("\"", "").split(",")))
 
