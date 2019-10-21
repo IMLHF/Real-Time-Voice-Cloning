@@ -16,11 +16,11 @@ def float_2_label(x, bits):
 
 
 def load_wav(path):
-    return librosa.load(path, sr=hp.sample_rate)[0]
+    return librosa.load(str(path), sr=hp.sample_rate)[0]
 
 
 def save_wav(x, path):
-    librosa.output.write_wav(path, x.astype(np.float32), sr=hp.sample_rate)
+    librosa.output.write_wav(str(path), x.astype(np.float32), sr=hp.sample_rate)
 
 
 def split_signal(x):
