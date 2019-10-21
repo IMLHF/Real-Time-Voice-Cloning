@@ -47,8 +47,8 @@ def simple_table(item_tuples) :
 
     for i in range(len(item_tuples)) :
 
-        temp_head = f'| {headings[i]} '
-        temp_body = f'| {cells[i]} '
+        temp_head = '| %s ' % headings[i]
+        temp_body = '| %s ' % cells[i]
 
         border += border_pattern[:len(temp_head)]
         head += temp_head
@@ -67,35 +67,35 @@ def simple_table(item_tuples) :
     print(' ')
 
 
-def time_since(started) :
+def time_since(started):
     elapsed = time.time() - started
     m = int(elapsed // 60)
     s = int(elapsed % 60)
-    if m >= 60 :
+    if m >= 60:
         h = int(m // 60)
         m = m % 60
-        return f'{h}h {m}m {s}s'
-    else :
-        return f'{m}m {s}s'
+        return '%dh %dm %ds' % (h,m,s)
+    else:
+        return '%dm %ds' % (m,s)
 
 
-def save_attention(attn, path) :
+def save_attention(attn, path):
     fig = plt.figure(figsize=(12, 6))
     plt.imshow(attn.T, interpolation='nearest', aspect='auto')
-    fig.savefig(f'{path}.png', bbox_inches='tight')
+    fig.savefig('%s.png' % path, bbox_inches='tight')
     plt.close(fig)
 
 
-def save_spectrogram(M, path, length=None) :
+def save_spectrogram(M, path, length=None):
     M = np.flip(M, axis=0)
     if length : M = M[:, :length]
     fig = plt.figure(figsize=(12, 6))
     plt.imshow(M, interpolation='nearest', aspect='auto')
-    fig.savefig(f'{path}.png', bbox_inches='tight')
+    fig.savefig('%s.png' % path, bbox_inches='tight')
     plt.close(fig)
 
 
-def plot(array) : 
+def plot(array) :
     fig = plt.figure(figsize=(30, 5))
     ax = fig.add_subplot(111)
     ax.xaxis.label.set_color('grey')
