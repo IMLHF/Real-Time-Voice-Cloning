@@ -1,15 +1,17 @@
 if [ -z "$1" ]; then
   echo "Need a step param:"
-  echo "  encoder_preprocess_train"
-  echo "  encoder_preprocess_test"
-  echo "  encoder_train"
+  echo "encoder_preprocess_train"
+  echo "encoder_preprocess_test"
+  echo "encoder_train"
   echo "synthesizer_preprocess_audio"
   echo "synthesizer_preprocess_embeds"
   echo "synthesizer_train"
+  echo "vocoder_preprocess"
+  echo "vocoder_train"
   exit -1
 fi
 
-GPU_DEVICES="3"
+GPU_DEVICES="0"
 step=$1
 
 if [ "$step" = "encoder_preprocess_train" ]; then
@@ -38,6 +40,12 @@ elif [ "$step" = "synthesizer_preprocess_embeds" ]; then
 elif [ "$step" = "synthesizer_train" ]; then
     CUDA_VISIBLE_DEVICES=$GPU_DEVICES python3.5 synthesizer_train.py synthesizer /home/zhangwenbo5/lihongfeng/english_voice_clone/alldata \
                                                                      2>&1 | tee -a log_lhf/synthesizer_train.log
+elif [ "$step" = "vocoder_preprocess" ]; then
+    CUDA_VISIBLE_DEVICES=$GPU_DEVICES python3.5 vocoder_preprocess.py /home/zhangwenbo5/lihongfeng/english_voice_clone/alldata \
+                                                                      2>&1 | tee -a log_lhf/vocoder_preprocess.log
+elif [ "$step" = "vocoder_train" ]; then
+    CUDA_VISIBLE_DEVICES=$GPU_DEVICES python3.5 vocoder_train.py vocoder /home/zhangwenbo5/lihongfeng/english_voice_clone/alldata \
+                                                                 2>&1 | tee -a log_lhf/vocoder_train.log
 else
     echo "step param error." && exit -1
 fi
