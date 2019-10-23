@@ -171,10 +171,10 @@ def train(log_dir, args, hparams):
     
     # Memory allocation on the GPU as needed
     config = tf.ConfigProto()
-    # config.gpu_options.per_process_gpu_memory_fraction = 0.43
-    config.gpu_options.allow_growth = True
+    # config.gpu_options.per_process_gpu_memory_fraction = 0.9
+    # config.gpu_options.allow_growth = True
     config.allow_soft_placement = True
-    
+
     # Train
     with tf.Session(config=config) as sess:
         try:
